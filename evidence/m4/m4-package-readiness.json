@@ -1,0 +1,70 @@
+{
+  "schema": "hera.m4_package_readiness",
+  "version": 1,
+  "generated_at": "2026-07-04T12:18:00Z",
+  "hera_commit": "d897c20",
+  "status": "partial",
+  "workspace_publish": false,
+  "docs": {
+    "command": "cargo doc --workspace --no-deps",
+    "exit_code": 0,
+    "status": "pass",
+    "summary": "Workspace docs rendered locally without dependency docs."
+  },
+  "packages": [
+    {
+      "crate": "terminal-protocol",
+      "command": "cargo package -p terminal-protocol --allow-dirty --no-verify",
+      "exit_code": 0,
+      "status": "pass",
+      "summary": "Packaged 5 files, 12.1KiB, 3.2KiB compressed."
+    },
+    {
+      "crate": "terminal-render-model",
+      "command": "cargo package -p terminal-render-model --allow-dirty --no-verify",
+      "exit_code": 0,
+      "status": "pass",
+      "summary": "Packaged 5 files, 10.3KiB, 2.7KiB compressed."
+    },
+    {
+      "crate": "terminal-core",
+      "command": "cargo package -p terminal-core --allow-dirty --no-verify",
+      "exit_code": 101,
+      "status": "blocked",
+      "summary": "Blocked because packaged dependencies resolve unpublished terminal-protocol through crates.io."
+    },
+    {
+      "crate": "terminal-fixtures",
+      "command": "cargo package -p terminal-fixtures --allow-dirty --no-verify",
+      "exit_code": 101,
+      "status": "blocked",
+      "summary": "Blocked because packaged dependencies resolve unpublished terminal-core through crates.io."
+    },
+    {
+      "crate": "terminal-pty",
+      "command": "cargo package -p terminal-pty --allow-dirty --no-verify",
+      "exit_code": 101,
+      "status": "blocked",
+      "summary": "Blocked because packaged dev dependencies resolve unpublished terminal-core through crates.io."
+    },
+    {
+      "crate": "terminal-cli",
+      "command": "cargo package -p terminal-cli --allow-dirty --no-verify",
+      "exit_code": 101,
+      "status": "blocked",
+      "summary": "Blocked because packaged dependencies resolve unpublished terminal-core through crates.io."
+    }
+  ],
+  "publish_actions": [
+    {
+      "command": "cargo publish",
+      "status": "out_of_scope",
+      "summary": "M4 performs readiness checks only and must not publish crates."
+    }
+  ],
+  "blockers": [
+    "Cargo package metadata is incomplete for public release.",
+    "Internal Hera crate publish order and registry names are undecided.",
+    "Workspace metadata intentionally keeps publish disabled."
+  ]
+}

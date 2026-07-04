@@ -1,0 +1,47 @@
+{
+  "schema": "hera.m4_public_replay",
+  "version": 1,
+  "id": "basic-shell",
+  "title": "Synthetic shell command output",
+  "source": "synthetic",
+  "privacy": "synthetic_public",
+  "generated_at": "2026-07-04T11:49:00Z",
+  "redaction": {
+    "status": "passed",
+    "policy_version": 1,
+    "checked_at": "2026-07-04T11:49:00Z",
+    "reject_patterns": [],
+    "normalized_fields": [
+      "elapsed_ms"
+    ]
+  },
+  "initial_size": {
+    "columns": 80,
+    "rows": 24
+  },
+  "events": [
+    {
+      "kind": "output",
+      "elapsed_ms": 0,
+      "data": "hera$ cargo test -p terminal-fixtures m4_replay\r\n"
+    },
+    {
+      "kind": "output",
+      "elapsed_ms": 15,
+      "data": "running 5 tests\r\ntest m4_public_replay_corpus_replays_deterministically ... ok\r\n"
+    },
+    {
+      "kind": "marker",
+      "elapsed_ms": 20,
+      "label": "tests-finished"
+    },
+    {
+      "kind": "output",
+      "elapsed_ms": 25,
+      "data": "test result: ok. 5 passed; 0 failed\r\n"
+    }
+  ],
+  "notes": [
+    "Synthetic public text only. No local shell path, username or private transcript content is represented."
+  ]
+}

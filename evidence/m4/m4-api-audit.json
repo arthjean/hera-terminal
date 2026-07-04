@@ -1,0 +1,87 @@
+{
+  "schema": "hera.m4_api_audit",
+  "version": 1,
+  "generated_at": "2026-07-04T12:18:00Z",
+  "hera_commit": "d897c20",
+  "command": "manual API audit plus cargo test --workspace and cargo doc --workspace --no-deps",
+  "status": "partial",
+  "sources": [
+    {
+      "label": "Rust API Guidelines",
+      "url": "https://rust-lang.github.io/api-guidelines/"
+    },
+    {
+      "label": "Cargo publishing guidance",
+      "url": "https://doc.rust-lang.org/cargo/reference/publishing.html"
+    },
+    {
+      "label": "docs.rs about docs builds",
+      "url": "https://docs.rs/about"
+    }
+  ],
+  "examples": [
+    {
+      "crate": "terminal-core",
+      "path": "crates/terminal-core/examples/headless_embedder.rs",
+      "status": "pass",
+      "proves": [
+        "byte ingestion",
+        "resize",
+        "render snapshot",
+        "no PTY or Paneflow dependency"
+      ]
+    },
+    {
+      "crate": "terminal-pty",
+      "path": "crates/terminal-pty/examples/pty_boundary.rs",
+      "status": "pass",
+      "proves": [
+        "PTY boundary outside terminal-core",
+        "output forwarding into terminal-core",
+        "render snapshot after PTY output"
+      ]
+    }
+  ],
+  "boundary_checks": [
+    {
+      "id": "api.parser_boundary",
+      "status": "pass",
+      "evidence": "terminal-core tests reject public vte parser type exposure"
+    },
+    {
+      "id": "api.pty_boundary",
+      "status": "pass",
+      "evidence": "terminal-core manifests stay PTY-free and terminal-pty tests reject public portable-pty type exposure"
+    },
+    {
+      "id": "api.renderer_boundary",
+      "status": "pass",
+      "evidence": "terminal-core exposes render-model snapshots and no GPUI, Paneflow or windowing dependencies"
+    },
+    {
+      "id": "api.error_shape",
+      "status": "pass",
+      "evidence": "TerminalError, RowLookupError and PtyError are typed errors implementing std::error::Error"
+    }
+  ],
+  "findings": [
+    {
+      "id": "api.package_metadata",
+      "severity": "release_blocker",
+      "status": "open",
+      "summary": "Cargo package warns that manifests lack description, license, documentation, homepage or repository metadata."
+    },
+    {
+      "id": "api.internal_publish_order",
+      "severity": "release_blocker",
+      "status": "open",
+      "summary": "Dependent crates cannot package until internal crate names and publish order are decided."
+    },
+    {
+      "id": "api.milestone_prefixed_public_names",
+      "severity": "accepted_gap",
+      "status": "m5_review",
+      "summary": "M1 and M2 public constants are acceptable during proof work, but should be reviewed before semver commitments."
+    }
+  ]
+}

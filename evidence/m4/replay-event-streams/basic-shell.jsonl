@@ -1,0 +1,5 @@
+{"asciicast_v2_mapping":{"hera_specific":["object events","millisecond offsets","public redaction metadata"],"incompatibility":"This is not an asciicast v2 file and should not be passed to an asciicast player.","shared_concepts":["newline-delimited JSON","header first line","event stream"]},"asciicast_v2_reference":"https://docs.asciinema.org/manual/asciicast/v2/","fixture_id":"basic-shell","format":"hera-jsonl","height":24,"public_mode":true,"schema":"hera.m4_event_stream","version":1,"width":80}
+{"data":"hera$ cargo test -p terminal-fixtures m4_replay\r\n","kind":"output","privacy":"synthetic_public","time_ms":0}
+{"data":"running 5 tests\r\ntest m4_public_replay_corpus_replays_deterministically ... ok\r\n","kind":"output","privacy":"synthetic_public","time_ms":15}
+{"kind":"marker","label":"tests-finished","privacy":"synthetic_public","time_ms":20}
+{"data":"test result: ok. 5 passed; 0 failed\r\n","kind":"output","privacy":"synthetic_public","time_ms":25}

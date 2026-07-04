@@ -1,0 +1,149 @@
+{
+  "schema": "hera.m4_performance_report",
+  "version": 1,
+  "generated_at": "2026-07-04T12:49:32Z",
+  "benchmark_input": "evidence/m4/m4-benchmark-summary.json",
+  "memory_input": "evidence/m4/m4-memory-profile.json",
+  "thresholds_input": "evidence/m4/m4-performance-thresholds.json",
+  "status": "baseline_created",
+  "evaluations": [
+    {
+      "metric_id": "byte_ingest",
+      "source": "benchmark",
+      "observed_nanos_per_iteration": 4300350,
+      "observed_hera_owned_bytes": null,
+      "status": "baseline_created",
+      "threshold": {
+        "metric_id": "byte_ingest",
+        "hard_gate": false,
+        "unstable": false,
+        "max_nanos_per_iteration": null,
+        "max_hera_owned_bytes": null,
+        "notes": [
+          "No accepted latency baseline exists yet; first M4 run creates the baseline."
+        ]
+      },
+      "notes": [
+        "No accepted latency baseline exists yet."
+      ]
+    },
+    {
+      "metric_id": "snapshot_generation",
+      "source": "benchmark",
+      "observed_nanos_per_iteration": 6379237,
+      "observed_hera_owned_bytes": null,
+      "status": "unstable_excluded",
+      "threshold": {
+        "metric_id": "snapshot_generation",
+        "hard_gate": false,
+        "unstable": true,
+        "max_nanos_per_iteration": null,
+        "max_hera_owned_bytes": null,
+        "notes": [
+          "Snapshot timing is recorded but excluded from hard pass claims until a stable release baseline exists."
+        ]
+      },
+      "notes": [
+        "Snapshot timing is recorded but excluded from hard pass claims until a stable release baseline exists."
+      ]
+    },
+    {
+      "metric_id": "replay",
+      "source": "benchmark",
+      "observed_nanos_per_iteration": 104432675,
+      "observed_hera_owned_bytes": null,
+      "status": "baseline_created",
+      "threshold": {
+        "metric_id": "replay",
+        "hard_gate": false,
+        "unstable": false,
+        "max_nanos_per_iteration": null,
+        "max_hera_owned_bytes": null,
+        "notes": [
+          "No accepted replay latency baseline exists yet; first M4 run creates the baseline."
+        ]
+      },
+      "notes": [
+        "No accepted latency baseline exists yet."
+      ]
+    },
+    {
+      "metric_id": "snapshot_comparison",
+      "source": "benchmark",
+      "observed_nanos_per_iteration": 101247662,
+      "observed_hera_owned_bytes": null,
+      "status": "baseline_created",
+      "threshold": {
+        "metric_id": "snapshot_comparison",
+        "hard_gate": false,
+        "unstable": false,
+        "max_nanos_per_iteration": null,
+        "max_hera_owned_bytes": null,
+        "notes": [
+          "No accepted comparison latency baseline exists yet; first M4 run creates the baseline."
+        ]
+      },
+      "notes": [
+        "No accepted latency baseline exists yet."
+      ]
+    },
+    {
+      "metric_id": "memory_10000_lines",
+      "source": "memory_profile",
+      "observed_nanos_per_iteration": null,
+      "observed_hera_owned_bytes": 8385104,
+      "status": "pass",
+      "threshold": {
+        "metric_id": "memory_10000_lines",
+        "hard_gate": true,
+        "unstable": false,
+        "max_nanos_per_iteration": null,
+        "max_hera_owned_bytes": 8388608,
+        "notes": [
+          "Memory proof must stay within the configured Hera scrollback byte budget."
+        ]
+      },
+      "notes": []
+    },
+    {
+      "metric_id": "memory_100000_lines",
+      "source": "memory_profile",
+      "observed_nanos_per_iteration": null,
+      "observed_hera_owned_bytes": 8385104,
+      "status": "pass",
+      "threshold": {
+        "metric_id": "memory_100000_lines",
+        "hard_gate": true,
+        "unstable": false,
+        "max_nanos_per_iteration": null,
+        "max_hera_owned_bytes": 8388608,
+        "notes": [
+          "Memory proof must stay bounded as discarded row count grows."
+        ]
+      },
+      "notes": []
+    },
+    {
+      "metric_id": "memory_1000000_lines",
+      "source": "memory_profile",
+      "observed_nanos_per_iteration": null,
+      "observed_hera_owned_bytes": 8385104,
+      "status": "pass",
+      "threshold": {
+        "metric_id": "memory_1000000_lines",
+        "hard_gate": true,
+        "unstable": false,
+        "max_nanos_per_iteration": null,
+        "max_hera_owned_bytes": 8388608,
+        "notes": [
+          "1M logical lines may be blocked by timeout, but passing runs must still stay inside the Hera byte budget."
+        ]
+      },
+      "notes": []
+    }
+  ],
+  "notes": [
+    "Latency metrics without prior accepted thresholds are marked baseline_created.",
+    "Metrics marked unstable are excluded from hard pass claims until a stable platform baseline exists."
+  ]
+}

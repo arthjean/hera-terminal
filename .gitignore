@@ -1,6 +1,9 @@
 /target/
 **/*.rs.bk
 
+/evidence/**/raw_local/
+/evidence/**/private/
+
 .env
 .env.*
 !.env.example

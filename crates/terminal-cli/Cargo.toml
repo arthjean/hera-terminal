@@ -12,8 +12,15 @@ terminal-core.workspace = true
 terminal-fixtures.workspace = true
 terminal-pty.workspace = true
 
+[dev-dependencies]
+criterion = "0.7.0"
+
 [features]
 live-pty-tests = []
+
+[[bench]]
+name = "m4_benchmarks"
+harness = false
 
 [lints]
 workspace = true

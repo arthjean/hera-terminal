@@ -1,0 +1,331 @@
+{
+  "schema": "hera.m4_compatibility_matrix",
+  "version": 1,
+  "generated_at": "2026-07-04T11:12:38Z",
+  "rows": [
+    {
+      "id": "vt.cursor.c0_controls",
+      "category": "cursor_movement",
+      "behavior": "Backspace, carriage return, line feed and horizontal tab move the cursor according to Hera M1 policy.",
+      "status": "implemented",
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "controls-cr-lf-bs-tab"
+          }
+        ]
+      },
+      "source_reference": {
+        "kind": "vttest",
+        "label": "VTTEST cursor and control behavior",
+        "url": "https://invisible-island.net/vttest/"
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": [
+          "Checked-in fixture validation has been run locally on Windows only."
+        ]
+      },
+      "notes": [],
+      "owner": "terminal-core"
+    },
+    {
+      "id": "vt.cursor.csi_positioning",
+      "category": "cursor_movement",
+      "behavior": "CSI CUP/HVP absolute cursor positioning.",
+      "status": "not_implemented",
+      "fixture_coverage": {
+        "status": "not_implemented",
+        "artifacts": []
+      },
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences cursor controls",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "platform_measurements": {
+        "windows": "not_applicable",
+        "linux": "not_applicable",
+        "macos": "not_applicable",
+        "notes": []
+      },
+      "notes": [
+        "terminal-core currently applies SGR and selected private modes, but ignores non-private CSI cursor positioning."
+      ],
+      "owner": "terminal-core"
+    },
+    {
+      "id": "vt.screen.erase_display_line",
+      "category": "screen_clearing",
+      "behavior": "Erase in display and erase in line clear cells without hiding known gaps.",
+      "status": "not_implemented",
+      "fixture_coverage": {
+        "status": "not_implemented",
+        "artifacts": []
+      },
+      "source_reference": {
+        "kind": "vttest",
+        "label": "VTTEST erase and BCE coverage",
+        "url": "https://invisible-island.net/vttest/"
+      },
+      "platform_measurements": {
+        "windows": "not_applicable",
+        "linux": "not_applicable",
+        "macos": "not_applicable",
+        "notes": []
+      },
+      "notes": [
+        "ED, EL and ECH behavior are listed as M4 gaps until fixtures and core semantics exist."
+      ],
+      "owner": "terminal-core"
+    },
+    {
+      "id": "vt.scrolling.primary_scrollback",
+      "category": "scrolling",
+      "behavior": "Primary screen output scrolls into bounded scrollback and trims to configured limits.",
+      "status": "implemented",
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "scrollback-trim"
+          }
+        ]
+      },
+      "source_reference": {
+        "kind": "vttest",
+        "label": "VTTEST scrolling categories",
+        "url": "https://invisible-island.net/vttest/"
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": [
+          "Checked-in fixture validation has been run locally on Windows only."
+        ]
+      },
+      "notes": [],
+      "owner": "terminal-core"
+    },
+    {
+      "id": "vt.sgr.character_attributes",
+      "category": "character_attributes",
+      "behavior": "SGR reset and 24-bit foreground color mutate rendered cell styles.",
+      "status": "implemented",
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "sgr-reset"
+          },
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "sgr-truecolor"
+          }
+        ]
+      },
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences SGR",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": [
+          "Checked-in fixture validation has been run locally on Windows only."
+        ]
+      },
+      "notes": [
+        "Fixture-backed subset covers reset and truecolor, not the whole SGR surface."
+      ],
+      "owner": "terminal-core"
+    },
+    {
+      "id": "vt.screen.alternate_1049",
+      "category": "alternate_screen",
+      "behavior": "DEC private mode 1049 switches to alternate screen and returns to primary without primary scrollback pollution.",
+      "status": "implemented",
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "alternate-screen-1049"
+          }
+        ]
+      },
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences alternate screen modes",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": [
+          "Checked-in fixture validation has been run locally on Windows only."
+        ]
+      },
+      "notes": [],
+      "owner": "terminal-core"
+    },
+    {
+      "id": "vt.resize.primary_reflow",
+      "category": "resize_reflow",
+      "behavior": "Primary wrapped rows reflow predictably when the viewport narrows and widens.",
+      "status": "implemented",
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "resize-primary-wrap-narrow-wide"
+          }
+        ]
+      },
+      "source_reference": {
+        "kind": "vttest",
+        "label": "VTTEST resize and wrapping references",
+        "url": "https://invisible-island.net/vttest/"
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": [
+          "Checked-in fixture validation has been run locally on Windows only."
+        ]
+      },
+      "notes": [],
+      "owner": "terminal-core"
+    },
+    {
+      "id": "vt.resize.alternate_preserves_primary",
+      "category": "resize_reflow",
+      "behavior": "Resizing while alternate screen is active does not pollute primary scrollback.",
+      "status": "implemented",
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "resize-alternate-keeps-primary-scrollback"
+          }
+        ]
+      },
+      "source_reference": {
+        "kind": "vttest",
+        "label": "VTTEST alternate screen and resize references",
+        "url": "https://invisible-island.net/vttest/"
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": [
+          "Checked-in fixture validation has been run locally on Windows only."
+        ]
+      },
+      "notes": [],
+      "owner": "terminal-core"
+    },
+    {
+      "id": "xterm.private_modes.1047_1048",
+      "category": "xterm_escape_handling",
+      "behavior": "DEC private alternate-screen modes 1047 and 1048 are tracked separately from 1049.",
+      "status": "not_implemented",
+      "fixture_coverage": {
+        "status": "not_implemented",
+        "artifacts": []
+      },
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences private modes",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "platform_measurements": {
+        "windows": "not_applicable",
+        "linux": "not_applicable",
+        "macos": "not_applicable",
+        "notes": []
+      },
+      "notes": [
+        "terminal-core records 47, 1047 and 1048 as unsupported instead of treating them as passing."
+      ],
+      "owner": "terminal-core"
+    },
+    {
+      "id": "xterm.mode.bracketed_paste",
+      "category": "xterm_escape_handling",
+      "behavior": "Bracketed paste mode 2004 toggles the render snapshot mode field.",
+      "status": "implemented",
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "bracketed-paste-mode"
+          }
+        ]
+      },
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences bracketed paste mode",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": [
+          "Checked-in fixture validation has been run locally on Windows only."
+        ]
+      },
+      "notes": [],
+      "owner": "terminal-core"
+    },
+    {
+      "id": "xterm.dcs.sixel_images",
+      "category": "xterm_escape_handling",
+      "behavior": "DCS Sixel image payloads are parsed only as safe payload metadata until image rendering is scoped.",
+      "status": "out_of_scope",
+      "fixture_coverage": {
+        "status": "out_of_scope",
+        "artifacts": []
+      },
+      "source_reference": {
+        "kind": "esctest2",
+        "label": "esctest2 xterm-style terminal tests",
+        "url": "https://github.com/ThomasDickey/esctest2"
+      },
+      "platform_measurements": {
+        "windows": "not_applicable",
+        "linux": "not_applicable",
+        "macos": "not_applicable",
+        "notes": []
+      },
+      "notes": [
+        "Image protocols remain explicitly out of M4 compatibility claims."
+      ],
+      "owner": "terminal-protocol"
+    }
+  ]
+}

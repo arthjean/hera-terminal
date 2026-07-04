@@ -1,0 +1,72 @@
+{
+  "schema": "hera.m4_benchmark_evidence",
+  "version": 1,
+  "generated_at": "2026-07-04T12:49:16Z",
+  "hera_commit": "d897c20",
+  "command": "terminal-cli m4-benchmark --output evidence/m4/m4-benchmark-summary.json",
+  "machine": {
+    "os": "windows",
+    "arch": "x86_64",
+    "rustc": "rustc 1.96.1 (31fca3adb 2026-06-26)",
+    "cargo_profile": "release"
+  },
+  "status": "baseline_created",
+  "measurements": [
+    {
+      "id": "byte_ingest",
+      "operation": "byte_ingest",
+      "input_name": "synthetic_2000_logical_lines",
+      "input_bytes": 26890,
+      "logical_lines": 2000,
+      "iterations": 8,
+      "total_nanos": 34402800,
+      "nanos_per_iteration": 4300350,
+      "throughput_bytes_per_second": 6252979,
+      "status": "baseline_created",
+      "notes": []
+    },
+    {
+      "id": "snapshot_generation",
+      "operation": "snapshot_generation",
+      "input_name": "synthetic_2000_logical_lines",
+      "input_bytes": 26890,
+      "logical_lines": 2000,
+      "iterations": 8,
+      "total_nanos": 51033900,
+      "nanos_per_iteration": 6379237,
+      "throughput_bytes_per_second": 4215237,
+      "status": "baseline_created",
+      "notes": []
+    },
+    {
+      "id": "replay",
+      "operation": "replay",
+      "input_name": "synthetic_2000_logical_lines",
+      "input_bytes": 26890,
+      "logical_lines": 2000,
+      "iterations": 8,
+      "total_nanos": 835461400,
+      "nanos_per_iteration": 104432675,
+      "throughput_bytes_per_second": 257486,
+      "status": "baseline_created",
+      "notes": []
+    },
+    {
+      "id": "snapshot_comparison",
+      "operation": "snapshot_comparison",
+      "input_name": "synthetic_2000_logical_lines",
+      "input_bytes": 26890,
+      "logical_lines": 2000,
+      "iterations": 8,
+      "total_nanos": 809981300,
+      "nanos_per_iteration": 101247662,
+      "throughput_bytes_per_second": 265586,
+      "status": "baseline_created",
+      "notes": []
+    }
+  ],
+  "notes": [
+    "Criterion.rs harness lives under crates/terminal-cli/benches/m4_benchmarks.rs.",
+    "Bulky Criterion output remains under target/criterion and is not an M4 public artifact."
+  ]
+}

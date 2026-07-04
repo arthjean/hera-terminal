@@ -1,0 +1,345 @@
+{
+  "schema": "hera.m4_evidence_manifest",
+  "version": 1,
+  "generated_at": "2026-07-04T12:52:06Z",
+  "hera_commit": "d897c20",
+  "redaction": {
+    "version": 1,
+    "updated_at": "2026-07-04T10:59:00Z",
+    "reject_patterns": [
+      "C:\\Users\\",
+      "C:/Users/",
+      "\\Users\\",
+      "%USERPROFILE%",
+      "/home/",
+      "OPENAI_API_KEY",
+      "ANTHROPIC_API_KEY",
+      "BEGIN OPENSSH PRIVATE KEY",
+      "BEGIN RSA PRIVATE KEY"
+    ],
+    "public_privacy_classes": [
+      "public_summary",
+      "scrubbed_public"
+    ]
+  },
+  "artifacts": [
+    {
+      "id": "m4_public_proof_report_baseline",
+      "type": "report",
+      "path": "docs/m4-public-proof-report.md",
+      "source_command": "manual: assemble EP-006 final M4 report from checked-in public evidence artifacts and milestone docs",
+      "generated_at": "2026-07-04T12:52:06Z",
+      "redaction_checked_at": "2026-07-04T12:52:06Z",
+      "privacy": "public_summary",
+      "reproducible": false,
+      "non_reproducible_reason": "Authored final report; validation command verifies schema and redaction only.",
+      "notes": [
+        "EP-006 final report links the public proof package and records the M5 compatibility hardening recommendation."
+      ]
+    },
+    {
+      "id": "m4_evidence_contract",
+      "type": "redaction_policy",
+      "path": "docs/m4-evidence-contract.md",
+      "source_command": "manual: define EP-001 public artifact layout and redaction policy",
+      "generated_at": "2026-07-04T10:59:00Z",
+      "redaction_checked_at": "2026-07-04T10:59:00Z",
+      "privacy": "public_summary",
+      "reproducible": false,
+      "non_reproducible_reason": "Authored policy document; Rust validation enforces the machine-readable subset.",
+      "notes": [
+        "Policy version 1 rejects raw local artifacts and stale redaction checks."
+      ]
+    },
+    {
+      "id": "m4_compatibility_matrix",
+      "type": "compatibility_matrix",
+      "path": "evidence/m4/compatibility-matrix.json",
+      "source_command": "cargo run -p terminal-cli -- validate-m4-compatibility evidence/m4/compatibility-matrix.json",
+      "generated_at": "2026-07-04T11:12:38Z",
+      "redaction_checked_at": "2026-07-04T11:12:38Z",
+      "privacy": "public_summary",
+      "reproducible": true,
+      "notes": [
+        "Rows separate implementation status from Windows, Linux and macOS runtime measurement status."
+      ]
+    },
+    {
+      "id": "m4_compatibility_matrix_doc",
+      "type": "compatibility_matrix_doc",
+      "path": "docs/m4-compatibility-matrix.md",
+      "source_command": "manual: render evidence/m4/compatibility-matrix.json into a reader-facing M4 compatibility table",
+      "generated_at": "2026-07-04T11:12:38Z",
+      "redaction_checked_at": "2026-07-04T11:12:38Z",
+      "privacy": "public_summary",
+      "reproducible": false,
+      "non_reproducible_reason": "Authored Markdown rendering of the machine-readable compatibility matrix.",
+      "notes": [
+        "Known gaps are visible in the table and are not converted into pass claims."
+      ]
+    },
+    {
+      "id": "m4_benchmark_summary",
+      "type": "benchmark_summary",
+      "path": "evidence/m4/m4-benchmark-summary.json",
+      "source_command": "cargo run -p terminal-cli --release -- m4-benchmark --output evidence/m4/m4-benchmark-summary.json",
+      "generated_at": "2026-07-04T12:49:16Z",
+      "redaction_checked_at": "2026-07-04T12:52:06Z",
+      "privacy": "public_summary",
+      "reproducible": true,
+      "notes": [
+        "Measures byte ingest, snapshot generation, replay and snapshot comparison on a deterministic synthetic workload."
+      ]
+    },
+    {
+      "id": "m4_memory_profile",
+      "type": "memory_profile",
+      "path": "evidence/m4/m4-memory-profile.json",
+      "source_command": "cargo run -p terminal-cli --release -- m4-memory-profile --output evidence/m4/m4-memory-profile.json",
+      "generated_at": "2026-07-04T12:49:28Z",
+      "redaction_checked_at": "2026-07-04T12:52:06Z",
+      "privacy": "public_summary",
+      "reproducible": true,
+      "notes": [
+        "Covers 10k, 100k and 1M logical-line scenarios with Hera-owned byte counters."
+      ]
+    },
+    {
+      "id": "m4_performance_thresholds",
+      "type": "performance_thresholds",
+      "path": "evidence/m4/m4-performance-thresholds.json",
+      "source_command": "manual: configure EP-003 baseline and memory thresholds",
+      "generated_at": "2026-07-04T11:32:20Z",
+      "redaction_checked_at": "2026-07-04T11:32:20Z",
+      "privacy": "public_summary",
+      "reproducible": false,
+      "non_reproducible_reason": "Threshold policy is maintainer-authored; the report generator evaluates it against generated evidence.",
+      "notes": [
+        "Latency metrics create baselines until accepted thresholds exist; memory metrics are hard-gated."
+      ]
+    },
+    {
+      "id": "m4_performance_report",
+      "type": "performance_report",
+      "path": "evidence/m4/m4-performance-report.json",
+      "source_command": "cargo run -p terminal-cli --release -- m4-performance-report --bench evidence/m4/m4-benchmark-summary.json --memory evidence/m4/m4-memory-profile.json --thresholds evidence/m4/m4-performance-thresholds.json --json-output evidence/m4/m4-performance-report.json --markdown-output docs/m4-benchmarks-and-memory.md",
+      "generated_at": "2026-07-04T12:49:32Z",
+      "redaction_checked_at": "2026-07-04T12:52:06Z",
+      "privacy": "public_summary",
+      "reproducible": true,
+      "notes": [
+        "Creates the machine-readable EP-003 rollup and threshold evaluation."
+      ]
+    },
+    {
+      "id": "m4_benchmarks_and_memory_doc",
+      "type": "performance_report_doc",
+      "path": "docs/m4-benchmarks-and-memory.md",
+      "source_command": "cargo run -p terminal-cli --release -- m4-performance-report --bench evidence/m4/m4-benchmark-summary.json --memory evidence/m4/m4-memory-profile.json --thresholds evidence/m4/m4-performance-thresholds.json --json-output evidence/m4/m4-performance-report.json --markdown-output docs/m4-benchmarks-and-memory.md",
+      "generated_at": "2026-07-04T12:49:32Z",
+      "redaction_checked_at": "2026-07-04T12:52:06Z",
+      "privacy": "public_summary",
+      "reproducible": true,
+      "notes": [
+        "Human-readable EP-003 benchmark, memory and threshold summary."
+      ]
+    },
+    {
+      "id": "m4_replay_fixture_basic_shell",
+      "type": "replay_fixture",
+      "path": "crates/terminal-fixtures/fixtures/m4-replay/basic-shell.json",
+      "source_command": "manual: synthesize public replay fixture for EP-004 basic shell output",
+      "generated_at": "2026-07-04T11:49:00Z",
+      "redaction_checked_at": "2026-07-04T11:49:00Z",
+      "privacy": "scrubbed_public",
+      "reproducible": false,
+      "non_reproducible_reason": "Synthetic fixture is authored test data; replay verification is reproducible.",
+      "notes": [
+        "Contains no local shell path, username or private transcript content."
+      ]
+    },
+    {
+      "id": "m4_replay_fixture_resize_and_wrap",
+      "type": "replay_fixture",
+      "path": "crates/terminal-fixtures/fixtures/m4-replay/resize-and-wrap.json",
+      "source_command": "manual: synthesize public replay fixture for EP-004 resize and wrap behavior",
+      "generated_at": "2026-07-04T11:49:00Z",
+      "redaction_checked_at": "2026-07-04T11:49:00Z",
+      "privacy": "scrubbed_public",
+      "reproducible": false,
+      "non_reproducible_reason": "Synthetic fixture is authored test data; replay verification is reproducible.",
+      "notes": [
+        "Normalized timing is excluded from deterministic snapshot hashing."
+      ]
+    },
+    {
+      "id": "m4_replay_fixture_alternate_screen",
+      "type": "replay_fixture",
+      "path": "crates/terminal-fixtures/fixtures/m4-replay/alternate-screen.json",
+      "source_command": "manual: synthesize public replay fixture for EP-004 alternate screen behavior",
+      "generated_at": "2026-07-04T11:49:00Z",
+      "redaction_checked_at": "2026-07-04T11:49:00Z",
+      "privacy": "scrubbed_public",
+      "reproducible": false,
+      "non_reproducible_reason": "Synthetic fixture is authored test data; replay verification is reproducible.",
+      "notes": [
+        "Covers public escape sequence replay without private TUI capture content."
+      ]
+    },
+    {
+      "id": "m4_replay_verification",
+      "type": "replay_verification",
+      "path": "evidence/m4/m4-replay-verification.json",
+      "source_command": "cargo run -p terminal-cli -- verify-m4-replay crates/terminal-fixtures/fixtures/m4-replay --json-output evidence/m4/m4-replay-verification.json",
+      "generated_at": "2026-07-04T12:48:53Z",
+      "redaction_checked_at": "2026-07-04T12:52:06Z",
+      "privacy": "public_summary",
+      "reproducible": true,
+      "notes": [
+        "Each public replay fixture replays twice with identical final snapshot bytes."
+      ]
+    },
+    {
+      "id": "m4_replay_event_stream_basic_shell",
+      "type": "replay_event_stream",
+      "path": "evidence/m4/replay-event-streams/basic-shell.jsonl",
+      "source_command": "cargo run -p terminal-cli -- export-m4-event-stream crates/terminal-fixtures/fixtures/m4-replay/basic-shell.json --output evidence/m4/replay-event-streams/basic-shell.jsonl",
+      "generated_at": "2026-07-04T12:48:53Z",
+      "redaction_checked_at": "2026-07-04T12:52:06Z",
+      "privacy": "scrubbed_public",
+      "reproducible": true,
+      "notes": [
+        "Hera-specific JSONL stream with a versioned public header; not asciicast-compatible."
+      ]
+    },
+    {
+      "id": "m4_replay_and_dogfood_demo_doc",
+      "type": "dogfood_demo_procedure",
+      "path": "docs/m4-replay-and-dogfood-demo.md",
+      "source_command": "manual: document EP-004 public replay proof and Paneflow shadow dogfood procedure",
+      "generated_at": "2026-07-04T11:55:08Z",
+      "redaction_checked_at": "2026-07-04T11:55:08Z",
+      "privacy": "public_summary",
+      "reproducible": false,
+      "non_reproducible_reason": "Authored procedure document; commands and artifacts are separately reproducible.",
+      "feature_flags": [
+        "hera-dogfood"
+      ],
+      "notes": [
+        "Documents raw local retention policy and zero-mismatch pass condition."
+      ]
+    },
+    {
+      "id": "m4_headless_embedder_example",
+      "type": "api_example",
+      "path": "crates/terminal-core/examples/headless_embedder.rs",
+      "source_command": "cargo test --workspace",
+      "generated_at": "2026-07-04T12:18:00Z",
+      "redaction_checked_at": "2026-07-04T12:18:00Z",
+      "privacy": "public_summary",
+      "reproducible": true,
+      "notes": [
+        "Compiling example shows byte ingestion, resize and render snapshot without PTY or Paneflow dependencies."
+      ]
+    },
+    {
+      "id": "m4_pty_boundary_example",
+      "type": "api_example",
+      "path": "crates/terminal-pty/examples/pty_boundary.rs",
+      "source_command": "cargo test --workspace",
+      "generated_at": "2026-07-04T12:18:00Z",
+      "redaction_checked_at": "2026-07-04T12:18:00Z",
+      "privacy": "public_summary",
+      "reproducible": true,
+      "notes": [
+        "Compiling example shows PTY runtime ownership outside terminal-core and output forwarding into terminal state."
+      ]
+    },
+    {
+      "id": "m4_api_and_package_readiness_doc",
+      "type": "api_readiness_doc",
+      "path": "docs/m4-api-and-package-readiness.md",
+      "source_command": "manual: summarize EP-005 API examples, package readiness and OSS security baseline",
+      "generated_at": "2026-07-04T12:18:00Z",
+      "redaction_checked_at": "2026-07-04T12:18:00Z",
+      "privacy": "public_summary",
+      "reproducible": false,
+      "non_reproducible_reason": "Authored reader-facing report; machine-readable evidence records command outcomes.",
+      "notes": [
+        "Documents that package readiness is partial and that cargo publish is out of scope."
+      ]
+    },
+    {
+      "id": "m4_api_audit",
+      "type": "api_audit",
+      "path": "evidence/m4/m4-api-audit.json",
+      "source_command": "manual API audit plus cargo test --workspace and cargo doc --workspace --no-deps",
+      "generated_at": "2026-07-04T12:18:00Z",
+      "redaction_checked_at": "2026-07-04T12:18:00Z",
+      "privacy": "public_summary",
+      "reproducible": false,
+      "non_reproducible_reason": "Audit judgment is authored from checked commands and source evidence.",
+      "notes": [
+        "Records no P0 boundary leak and open release blockers for package metadata and internal publish ordering."
+      ]
+    },
+    {
+      "id": "m4_package_readiness",
+      "type": "package_readiness",
+      "path": "evidence/m4/m4-package-readiness.json",
+      "source_command": "cargo doc --workspace --no-deps; cargo package -p <crate> --allow-dirty --no-verify",
+      "generated_at": "2026-07-04T12:18:00Z",
+      "redaction_checked_at": "2026-07-04T12:18:00Z",
+      "privacy": "public_summary",
+      "reproducible": true,
+      "notes": [
+        "Leaf crates package; dependent crates are blocked until internal crate registry names or publish order exist."
+      ]
+    },
+    {
+      "id": "m4_oss_security_baseline",
+      "type": "security_baseline",
+      "path": "evidence/m4/m4-oss-security-baseline.json",
+      "source_command": "cargo metadata --locked --no-deps --format-version 1; cargo tree --locked --duplicates; local binary and credential scans",
+      "generated_at": "2026-07-04T12:18:00Z",
+      "redaction_checked_at": "2026-07-04T12:18:00Z",
+      "privacy": "public_summary",
+      "reproducible": true,
+      "notes": [
+        "Internal local checks pass with gaps; external OpenSSF Scorecard is not measured because the CLI is unavailable."
+      ]
+    },
+    {
+      "id": "paneflow_dogfood_demo_2026_07_04_ep004",
+      "type": "dogfood_demo_summary",
+      "path": "evidence/m4/paneflow-dogfood-demo-2026-07-04-ep004.json",
+      "source_command": "cargo check --workspace --features hera-dogfood; cargo test --workspace --features hera-dogfood; PANEFLOW_HERA_DOGFOOD=shadow cargo test -p paneflow-app --features hera-dogfood startup_token_checkpoint_compares_after_shadow_drain",
+      "generated_at": "2026-07-04T12:03:04Z",
+      "redaction_checked_at": "2026-07-04T12:03:04Z",
+      "privacy": "public_summary",
+      "feature_flags": [
+        "hera-dogfood"
+      ],
+      "reproducible": true,
+      "notes": [
+        "Records the EP-004 Paneflow feature gate and targeted shadow smoke with zero mismatch report files."
+      ]
+    },
+    {
+      "id": "paneflow_dogfood_smoke_2026_07_04",
+      "type": "dogfood_smoke_summary",
+      "path": "evidence/m4/paneflow-dogfood-smoke-2026-07-04.json",
+      "source_command": "PANEFLOW_HERA_DOGFOOD=shadow PANEFLOW_HERA_DOGFOOD_ARTIFACT_DIR=<paneflow-repo>/.paneflow-audit/hera-dogfood/m4-smoke-2026-07-04-ep001 PANEFLOW_HERA_DOGFOOD_RETENTION=scrubbed PANEFLOW_HERA_TERMINAL_ROOT=<hera-repo> cargo test -p paneflow-app --features hera-dogfood startup_token_checkpoint_compares_after_shadow_drain",
+      "generated_at": "2026-07-04T10:59:00Z",
+      "redaction_checked_at": "2026-07-04T10:59:00Z",
+      "privacy": "public_summary",
+      "feature_flags": [
+        "hera-dogfood"
+      ],
+      "reproducible": true,
+      "notes": [
+        "Local artifact directory is represented with a repo placeholder, not an absolute private path."
+      ]
+    }
+  ]
+}

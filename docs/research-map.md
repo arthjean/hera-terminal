@@ -1,8 +1,8 @@
 # Research Map
 
-Status: M2 complete, M3 planning boundary
-Date: 2026-07-03
-Scope: architecture research for `Hera`, not implementation.
+Status: M4 public proof complete, M5 compatibility and release hardening recommended
+Date: 2026-07-04
+Scope: architecture research and decision register for `Hera`, not implementation.
 
 ## Executive Synthesis
 
@@ -1152,29 +1152,32 @@ These are the public specs/docs worth keeping near the repo:
 | Smallest Paneflow API? | Byte ingestion, render snapshot, viewport query, snapshot/replay, semantic observer events. No Paneflow types. |
 | Tests beyond local confidence? | Upstream-inspired golden fixtures, xterm/VTTEST/esctest2 corpus, fuzzing, ConPTY replay corpus and memory benchmarks. |
 
-## M2 Closeout And Next Step
+## M4 Closeout And M5 Recommendation
 
-M2 is complete: `terminal-cli run <command>` executes through the PTY harness,
-feeds bytes into `terminal-core`, preserves the headless core boundary, emits a
-final snapshot artifact and can write deterministic `hera.pty_recording`
-recordings. Offline PTY replay is owned by `terminal-fixtures`.
+M1 through M4 are complete as staged proof, not as release maturity. Hera now has
+a headless core, PTY runtime boundary, Paneflow shadow dogfood evidence and a
+public M4 proof package.
 
-`terminal-core` remains PTY-free and continues to own parser semantics, visible
-state, alternate screen, resize, snapshots and byte ingestion. `terminal-pty`
-owns `portable-pty`, process IO, resize, lifecycle and platform quirks. Direct
-command mode must pass program and args as argv, never by joining a shell
-string. Shell interpretation belongs only behind explicit shell mode, and OSC or
-other terminal payloads must never execute host commands.
+M4 public proof lives in `docs/m4-public-proof-report.md`. It links the evidence
+contract, compatibility matrix, benchmark and memory reports, replay corpus,
+Paneflow dogfood demo procedure, API examples, package readiness evidence and
+OSS security baseline.
 
-The active M3 decision gate is `docs/m3-paneflow-dogfood-report.md`. Paneflow
-dogfood remains behind a feature flag and runtime opt-in, while Hera keeps
-checked-in evidence to scrubbed or synthetic recordings and metrics summaries.
+The current verdict is partial public proof. Replay determinism, bounded
+Hera-owned memory counters, public API examples and redaction discipline are
+solid enough to inspect. Terminal compatibility breadth, Linux/macOS runtime
+measurements, package metadata, internal crate publish order, external OpenSSF
+Scorecard coverage and broad real-session dogfood are still gaps.
 
-The current recommendation is continue dogfood, not replace Paneflow's terminal
-path. M4 should only move toward replacement after real local Codex/Claude
-captures produce measured RSS, latency and mismatch evidence within budget.
+Recommended M5: compatibility and release hardening. Do not replace Paneflow's
+terminal path yet. The next chantier should expand fixture-backed VT coverage,
+resolve or explicitly defer CSI positioning, ED/EL/ECH and DEC private mode
+gaps, add scrubbed real-session replay derivatives, measure Linux and macOS,
+complete package metadata and publish-order decisions, and rerun a broader
+Paneflow shadow dogfood scenario.
 
-Known non-blocking follow-up: `terminal-cli replay` still targets M1 fixture
-packs. PTY recordings replay through `terminal-fixtures`; a dedicated CLI entry
-for PTY and M3 dogfood recordings can be added when that improves dogfood
-ergonomics.
+The threshold to unlock host replacement experiments is no P0 terminal mismatch
+in longer Paneflow shadow dogfood, pass or explicitly deferred status for core
+compatibility gaps, platform measurement rows for Windows, Linux and macOS, and
+clean package readiness for intended public crates without running `cargo
+publish`.

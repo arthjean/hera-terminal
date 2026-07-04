@@ -1,0 +1,60 @@
+{
+  "schema": "hera.m4_replay_verification",
+  "version": 1,
+  "generated_at": "2026-07-04T13:13:57Z",
+  "command": "terminal-cli verify-m4-replay crates/terminal-fixtures/fixtures/m4-replay --json-output evidence/m4/m4-replay-verification.json",
+  "status": "pass",
+  "fixtures": [
+    {
+      "fixture_id": "alternate-screen",
+      "title": "Synthetic alternate screen transition",
+      "status": "pass",
+      "event_count": 4,
+      "event_counts": {
+        "output": 3,
+        "resize": 0,
+        "marker": 1,
+        "unsupported": 0
+      },
+      "final_snapshot_hash": "fnv1a64:547f00e8bba7ee3b",
+      "final_snapshot_bytes": 275497,
+      "notes": [
+        "Synthetic public escape sequence coverage for the replay proof package. This is not a private TUI capture."
+      ]
+    },
+    {
+      "fixture_id": "basic-shell",
+      "title": "Synthetic shell command output",
+      "status": "pass",
+      "event_count": 4,
+      "event_counts": {
+        "output": 3,
+        "resize": 0,
+        "marker": 1,
+        "unsupported": 0
+      },
+      "final_snapshot_hash": "fnv1a64:b71f8eff7558aca2",
+      "final_snapshot_bytes": 275377,
+      "notes": [
+        "Synthetic public text only. No local shell path, username or private transcript content is represented."
+      ]
+    },
+    {
+      "fixture_id": "resize-and-wrap",
+      "title": "Synthetic resize and wrapped output",
+      "status": "pass",
+      "event_count": 3,
+      "event_counts": {
+        "output": 2,
+        "resize": 1,
+        "marker": 0,
+        "unsupported": 0
+      },
+      "final_snapshot_hash": "fnv1a64:2fca5f8956605cc1",
+      "final_snapshot_bytes": 11987,
+      "notes": [
+        "Synthetic workload checks that normalized timing and resize events do not affect deterministic final snapshot hashing."
+      ]
+    }
+  ]
+}

@@ -2,23 +2,27 @@
 
 #![forbid(unsafe_code)]
 
+mod m4_performance_cli;
+
 use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use serde::Serialize;
 use terminal_core::{Terminal, TerminalError};
 use terminal_fixtures::{
     FixtureRunner, M1_MAX_FIXTURE_INPUT_BYTES, M1_MAX_SNAPSHOT_BYTES,
-    M2_MAX_PTY_RECORDING_OUTPUT_BYTES, PtyRecording, PtyRecordingCommandMetadata,
-    PtyRecordingCommandMode, PtyRecordingEvent, PtyRecordingExitMetadata,
-    PtyRecordingInputMetadata, PtyRecordingMetadata, PtyRecordingPlatformMetadata,
-    PtyRecordingRuntimeMetadata, PtyRecordingSize, PtyRecordingStorageMetadata, TerminalSnapshot,
-    deserialize_snapshot, first_snapshot_difference, serialize_pty_recording_pretty,
-    serialize_snapshot_pretty, snapshot_terminal,
+    M2_MAX_PTY_RECORDING_OUTPUT_BYTES, M4_PUBLIC_REPLAY_VERSION, M4_REPLAY_VERIFICATION_SCHEMA,
+    M4_REPLAY_VERIFICATION_VERSION, M4CompatibilityMatrix, M4EvidenceManifest,
+    M4PublicReplayFixture, M4ReplayVerificationStatus, M4ReplayVerificationSummary, PtyRecording,
+    PtyRecordingCommandMetadata, PtyRecordingCommandMode, PtyRecordingEvent,
+    PtyRecordingExitMetadata, PtyRecordingInputMetadata, PtyRecordingMetadata,
+    PtyRecordingPlatformMetadata, PtyRecordingRuntimeMetadata, PtyRecordingSize,
+    PtyRecordingStorageMetadata, TerminalSnapshot, deserialize_snapshot, first_snapshot_difference,
+    serialize_pty_recording_pretty, serialize_snapshot_pretty, snapshot_terminal,
 };
 use terminal_pty::{
     M2_DEFAULT_COMMAND_TIMEOUT_MS, M2_MAX_COMMAND_TIMEOUT_MS, M2_MAX_WRITE_CHUNK_BYTES,
@@ -46,14 +50,14 @@ fn main() -> ExitCode {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct CommandOutcome {
+pub(crate) struct CommandOutcome {
     code: u8,
     stdout: String,
     stderr: String,
 }
 
 impl CommandOutcome {
-    fn success(stdout: impl Into<String>) -> Self {
+    pub(crate) fn success(stdout: impl Into<String>) -> Self {
         Self {
             code: 0,
             stdout: stdout.into(),
@@ -61,7 +65,7 @@ impl CommandOutcome {
         }
     }
 
-    fn failure(code: u8, stderr: impl Into<String>) -> Self {
+    pub(crate) fn failure(code: u8, stderr: impl Into<String>) -> Self {
         Self {
             code,
             stdout: String::new(),
@@ -69,7 +73,7 @@ impl CommandOutcome {
         }
     }
 
-    fn complete(code: u8, stdout: impl Into<String>, stderr: impl Into<String>) -> Self {
+    pub(crate) fn complete(code: u8, stdout: impl Into<String>, stderr: impl Into<String>) -> Self {
         Self {
             code,
             stdout: stdout.into(),
@@ -92,6 +96,13 @@ fn run(args: Vec<OsString>) -> CommandOutcome {
         "replay" => replay_command(&args[1..]),
         "compare" => compare_command(&args[1..]),
         "run" => run_command(&args[1..]),
+        "validate-m4-evidence" => validate_m4_evidence_command(&args[1..]),
+        "validate-m4-compatibility" => validate_m4_compatibility_command(&args[1..]),
+        "verify-m4-replay" => verify_m4_replay_command(&args[1..]),
+        "export-m4-event-stream" => export_m4_event_stream_command(&args[1..]),
+        "m4-benchmark" => m4_performance_cli::benchmark_command(&args[1..]),
+        "m4-memory-profile" => m4_performance_cli::memory_profile_command(&args[1..]),
+        "m4-performance-report" => m4_performance_cli::performance_report_command(&args[1..]),
         _ => CommandOutcome::failure(2, usage()),
     }
 }
@@ -182,6 +193,200 @@ fn run_command(args: &[OsString]) -> CommandOutcome {
     }
 
     CommandOutcome::complete(code, output, stderr)
+}
+
+fn validate_m4_evidence_command(args: &[OsString]) -> CommandOutcome {
+    let Some(path) = one_path_arg(args) else {
+        return CommandOutcome::failure(2, "usage: terminal-cli validate-m4-evidence <manifest>");
+    };
+
+    let manifest = match M4EvidenceManifest::from_path(&path) {
+        Ok(manifest) => manifest,
+        Err(error) => return CommandOutcome::failure(1, error.to_string()),
+    };
+    let repo_root = m4_manifest_repo_root(&path);
+    if let Err(error) = manifest.validate_public_artifact_files(&repo_root) {
+        return CommandOutcome::failure(1, error.to_string());
+    }
+
+    CommandOutcome::success(format!(
+        "M4 evidence manifest valid: {} artifacts",
+        manifest.artifacts().len()
+    ))
+}
+
+fn validate_m4_compatibility_command(args: &[OsString]) -> CommandOutcome {
+    let Some(path) = one_path_arg(args) else {
+        return CommandOutcome::failure(
+            2,
+            "usage: terminal-cli validate-m4-compatibility <matrix>",
+        );
+    };
+
+    let matrix = match M4CompatibilityMatrix::from_path(&path) {
+        Ok(matrix) => matrix,
+        Err(error) => return CommandOutcome::failure(1, error.to_string()),
+    };
+    let repo_root = m4_manifest_repo_root(&path);
+    if let Err(error) = matrix.validate_referenced_artifacts(&path, &repo_root) {
+        return CommandOutcome::failure(1, error.to_string());
+    }
+
+    CommandOutcome::success(format!(
+        "M4 compatibility matrix valid: {} rows",
+        matrix.rows().len()
+    ))
+}
+
+fn verify_m4_replay_command(args: &[OsString]) -> CommandOutcome {
+    let options = match VerifyM4ReplayOptions::parse(args) {
+        Ok(options) => options,
+        Err(message) => return CommandOutcome::failure(2, message),
+    };
+    let paths = match collect_m4_replay_paths(&options.path) {
+        Ok(paths) => paths,
+        Err(message) => return CommandOutcome::failure(1, message),
+    };
+
+    let mut reports = Vec::with_capacity(paths.len());
+    for path in &paths {
+        let fixture = match M4PublicReplayFixture::from_path(path) {
+            Ok(fixture) => fixture,
+            Err(error) => return CommandOutcome::failure(1, error.to_string()),
+        };
+        let report = match fixture.verify() {
+            Ok(report) => report,
+            Err(error) => return CommandOutcome::failure(1, error.to_string()),
+        };
+        reports.push(report);
+    }
+
+    let summary = M4ReplayVerificationSummary {
+        schema: M4_REPLAY_VERIFICATION_SCHEMA.to_owned(),
+        version: M4_REPLAY_VERIFICATION_VERSION,
+        generated_at: utc_now(),
+        command: cli_command_line("verify-m4-replay", args),
+        status: M4ReplayVerificationStatus::Pass,
+        fixtures: reports,
+    };
+    if let Some(output) = options.json_output.as_deref() {
+        if let Err(error) = write_json(output, &summary) {
+            return CommandOutcome::failure(1, error);
+        }
+    }
+
+    CommandOutcome::success(format!(
+        "M4 replay verification passed: {} fixtures",
+        summary.fixtures.len()
+    ))
+}
+
+fn export_m4_event_stream_command(args: &[OsString]) -> CommandOutcome {
+    let options = match ExportM4EventStreamOptions::parse(args) {
+        Ok(options) => options,
+        Err(message) => return CommandOutcome::failure(2, message),
+    };
+    let fixture = match M4PublicReplayFixture::from_path(&options.fixture) {
+        Ok(fixture) => fixture,
+        Err(error) => return CommandOutcome::failure(1, error.to_string()),
+    };
+    let stream = match fixture.to_public_event_stream() {
+        Ok(stream) => stream,
+        Err(error) => return CommandOutcome::failure(1, error.to_string()),
+    };
+    if let Err(error) = write_text(&options.output, &stream) {
+        return CommandOutcome::failure(1, error);
+    }
+
+    CommandOutcome::success(format!(
+        "wrote M4 public event stream v{}: {}",
+        M4_PUBLIC_REPLAY_VERSION,
+        options.output.display()
+    ))
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct VerifyM4ReplayOptions {
+    path: PathBuf,
+    json_output: Option<PathBuf>,
+}
+
+impl VerifyM4ReplayOptions {
+    fn parse(args: &[OsString]) -> Result<Self, String> {
+        if args.is_empty() {
+            return Err(m4_replay_verify_usage());
+        }
+
+        let mut path = None;
+        let mut json_output = None;
+        let mut index = 0usize;
+        while index < args.len() {
+            let Some(value) = args[index].to_str() else {
+                return Err("M4 replay arguments must be valid UTF-8".to_owned());
+            };
+            match value {
+                "--json-output" => {
+                    json_output = Some(value_arg_path(args, index, "--json-output")?);
+                    index += 2;
+                }
+                flag if flag.starts_with("--") => return Err(m4_replay_verify_usage()),
+                _ => {
+                    if path.is_some() {
+                        return Err(m4_replay_verify_usage());
+                    }
+                    path = Some(PathBuf::from(&args[index]));
+                    index += 1;
+                }
+            }
+        }
+
+        Ok(Self {
+            path: path.ok_or_else(m4_replay_verify_usage)?,
+            json_output,
+        })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ExportM4EventStreamOptions {
+    fixture: PathBuf,
+    output: PathBuf,
+}
+
+impl ExportM4EventStreamOptions {
+    fn parse(args: &[OsString]) -> Result<Self, String> {
+        if args.is_empty() {
+            return Err(m4_event_stream_usage());
+        }
+
+        let mut fixture = None;
+        let mut output = None;
+        let mut index = 0usize;
+        while index < args.len() {
+            let Some(value) = args[index].to_str() else {
+                return Err("M4 event stream arguments must be valid UTF-8".to_owned());
+            };
+            match value {
+                "--output" => {
+                    output = Some(value_arg_path(args, index, "--output")?);
+                    index += 2;
+                }
+                flag if flag.starts_with("--") => return Err(m4_event_stream_usage()),
+                _ => {
+                    if fixture.is_some() {
+                        return Err(m4_event_stream_usage());
+                    }
+                    fixture = Some(PathBuf::from(&args[index]));
+                    index += 1;
+                }
+            }
+        }
+
+        Ok(Self {
+            fixture: fixture.ok_or_else(m4_event_stream_usage)?,
+            output: output.ok_or_else(m4_event_stream_usage)?,
+        })
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -815,8 +1020,107 @@ fn one_path_arg(args: &[OsString]) -> Option<PathBuf> {
     (args.len() == 1).then(|| PathBuf::from(&args[0]))
 }
 
+fn collect_m4_replay_paths(path: &Path) -> Result<Vec<PathBuf>, String> {
+    let metadata = fs::metadata(path).map_err(|error| format!("{}: {error}", path.display()))?;
+    if metadata.is_file() {
+        return Ok(vec![path.to_path_buf()]);
+    }
+    if !metadata.is_dir() {
+        return Err(format!("{}: expected a file or directory", path.display()));
+    }
+
+    let mut paths = fs::read_dir(path)
+        .map_err(|error| format!("{}: {error}", path.display()))?
+        .map(|entry| entry.map_err(|error| format!("{}: {error}", path.display())))
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .map(|entry| entry.path())
+        .filter(|entry_path| entry_path.extension().and_then(OsStr::to_str) == Some("json"))
+        .collect::<Vec<_>>();
+    paths.sort();
+    if paths.is_empty() {
+        return Err(format!(
+            "{}: no M4 replay JSON fixtures found",
+            path.display()
+        ));
+    }
+
+    Ok(paths)
+}
+
+fn write_json(path: &Path, value: &impl Serialize) -> Result<(), String> {
+    let json = serialize_json(value)?;
+    write_text(path, &(json + "\n"))
+}
+
+fn write_text(path: &Path, text: &str) -> Result<(), String> {
+    ensure_parent(path)?;
+    fs::write(path, text).map_err(|error| format!("{}: {error}", path.display()))
+}
+
+fn ensure_parent(path: &Path) -> Result<(), String> {
+    let Some(parent) = path.parent() else {
+        return Ok(());
+    };
+    if parent.as_os_str().is_empty() {
+        return Ok(());
+    }
+    fs::create_dir_all(parent).map_err(|error| format!("{}: {error}", parent.display()))
+}
+
+fn value_arg_path(args: &[OsString], index: usize, flag: &str) -> Result<PathBuf, String> {
+    args.get(index + 1)
+        .map(PathBuf::from)
+        .ok_or_else(|| format!("{flag} requires a value"))
+}
+
+fn cli_command_line(command: &str, args: &[OsString]) -> String {
+    let mut parts = vec!["terminal-cli".to_owned(), command.to_owned()];
+    parts.extend(args.iter().map(|arg| arg.to_string_lossy().into_owned()));
+    parts.join(" ")
+}
+
+fn utc_now() -> String {
+    let seconds = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |duration| duration.as_secs());
+    unix_seconds_to_utc(seconds)
+}
+
+fn unix_seconds_to_utc(seconds: u64) -> String {
+    let days = (seconds / 86_400) as i64;
+    let seconds_of_day = seconds % 86_400;
+    let (year, month, day) = civil_from_days(days);
+    let hour = seconds_of_day / 3_600;
+    let minute = (seconds_of_day % 3_600) / 60;
+    let second = seconds_of_day % 60;
+    format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}Z")
+}
+
+fn civil_from_days(days: i64) -> (i64, u32, u32) {
+    let z = days + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let year = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let day = doy - (153 * mp + 2) / 5 + 1;
+    let month = mp + if mp < 10 { 3 } else { -9 };
+    let year = year + i64::from(month <= 2);
+    (year, month as u32, day as u32)
+}
+
+fn m4_replay_verify_usage() -> String {
+    "usage: terminal-cli verify-m4-replay <fixture-or-directory> [--json-output <path>]".to_owned()
+}
+
+fn m4_event_stream_usage() -> String {
+    "usage: terminal-cli export-m4-event-stream <fixture> --output <path>".to_owned()
+}
+
 fn usage() -> &'static str {
-    "usage: terminal-cli <inject|replay|compare|run> ...\n\nexamples:\n  terminal-cli run -- <program> [args...]\n  terminal-cli run --shell --command \"<command>\""
+    "usage: terminal-cli <inject|replay|compare|run|validate-m4-evidence|validate-m4-compatibility|verify-m4-replay|export-m4-event-stream|m4-benchmark|m4-memory-profile|m4-performance-report> ...\n\nexamples:\n  terminal-cli run -- <program> [args...]\n  terminal-cli run --shell --command \"<command>\"\n  terminal-cli validate-m4-evidence evidence/m4/evidence-manifest.json\n  terminal-cli validate-m4-compatibility evidence/m4/compatibility-matrix.json\n  terminal-cli verify-m4-replay crates/terminal-fixtures/fixtures/m4-replay --json-output evidence/m4/m4-replay-verification.json\n  terminal-cli export-m4-event-stream crates/terminal-fixtures/fixtures/m4-replay/basic-shell.json --output evidence/m4/replay-event-streams/basic-shell.jsonl\n  terminal-cli m4-benchmark --output evidence/m4/m4-benchmark-summary.json\n  terminal-cli m4-memory-profile --output evidence/m4/m4-memory-profile.json\n  terminal-cli m4-performance-report --bench evidence/m4/m4-benchmark-summary.json --memory evidence/m4/m4-memory-profile.json --thresholds evidence/m4/m4-performance-thresholds.json --json-output evidence/m4/m4-performance-report.json --markdown-output docs/m4-benchmarks-and-memory.md"
 }
 
 fn required_value(
@@ -894,6 +1198,33 @@ fn ensure_output_parent_exists(path: &Path) -> Result<(), RunParseError> {
         "output directory not found: {}",
         parent.display()
     )))
+}
+
+fn m4_manifest_repo_root(path: &Path) -> PathBuf {
+    let absolute = if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        std::env::current_dir()
+            .unwrap_or_else(|_| PathBuf::from("."))
+            .join(path)
+    };
+
+    let Some(manifest_dir) = absolute.parent() else {
+        return std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    };
+    let Some(evidence_dir) = manifest_dir.parent() else {
+        return std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    };
+    if manifest_dir.file_name().and_then(OsStr::to_str) == Some("m4")
+        && evidence_dir.file_name().and_then(OsStr::to_str) == Some("evidence")
+    {
+        return evidence_dir
+            .parent()
+            .map(Path::to_path_buf)
+            .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
+    }
+
+    std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
 }
 
 fn os_to_string(value: impl AsRef<OsStr>) -> String {
@@ -1208,6 +1539,119 @@ mod tests {
     }
 
     #[test]
+    fn validate_m4_evidence_checks_manifest_and_artifact_files() {
+        let root = temp_dir("hera-cli-m4-evidence");
+        let evidence_dir = root.join("evidence").join("m4");
+        let docs_dir = root.join("docs");
+        fs::create_dir_all(&evidence_dir).expect("evidence dir should be writable");
+        fs::create_dir_all(&docs_dir).expect("docs dir should be writable");
+        fs::write(
+            docs_dir.join("m4-public-proof-report.md"),
+            "public summary\n",
+        )
+        .expect("artifact should be writable");
+        let manifest_path = evidence_dir.join("evidence-manifest.json");
+        fs::write(
+            &manifest_path,
+            r#"{
+              "schema": "hera.m4_evidence_manifest",
+              "version": 1,
+              "generated_at": "2026-07-04T00:00:00Z",
+              "hera_commit": "d897c20",
+              "redaction": {
+                "version": 1,
+                "updated_at": "2026-07-04T00:00:00Z",
+                "reject_patterns": ["C:\\Users\\", "/home/"],
+                "public_privacy_classes": ["public_summary", "scrubbed_public"]
+              },
+              "artifacts": [{
+                "id": "report",
+                "type": "report",
+                "path": "docs/m4-public-proof-report.md",
+                "source_command": "manual",
+                "generated_at": "2026-07-04T00:00:00Z",
+                "redaction_checked_at": "2026-07-04T00:00:00Z",
+                "privacy": "public_summary",
+                "reproducible": true
+              }]
+            }"#,
+        )
+        .expect("manifest should be writable");
+
+        let outcome = run(vec![
+            OsString::from("validate-m4-evidence"),
+            manifest_path.into_os_string(),
+        ]);
+        let _ = fs::remove_dir_all(&root);
+
+        assert_eq!(outcome.code, 0);
+        assert!(outcome.stdout.contains("1 artifacts"));
+    }
+
+    #[test]
+    fn validate_m4_compatibility_checks_matrix_and_fixture_links() {
+        let root = temp_dir("hera-cli-m4-compatibility");
+        let evidence_dir = root.join("evidence").join("m4");
+        let fixture_dir = root
+            .join("crates")
+            .join("terminal-fixtures")
+            .join("fixtures");
+        fs::create_dir_all(&evidence_dir).expect("evidence dir should be writable");
+        fs::create_dir_all(&fixture_dir).expect("fixture dir should be writable");
+        fs::write(
+            fixture_dir.join("m1-golden.json"),
+            r#"{"fixtures":[{"name":"plain-text","terminal":{"columns":2,"rows":1},"chunks":[{"bytes":[111,107]}],"expected":{"viewport_lines":["ok"]}}]}"#,
+        )
+        .expect("fixture pack should be writable");
+        let matrix_path = evidence_dir.join("compatibility-matrix.json");
+        fs::write(
+            &matrix_path,
+            r#"{
+              "schema": "hera.m4_compatibility_matrix",
+              "version": 1,
+              "generated_at": "2026-07-04T00:00:00Z",
+              "rows": [{
+                "id": "vt.text.plain",
+                "category": "cursor_movement",
+                "behavior": "Plain printable input advances the cursor.",
+                "status": "implemented",
+                "fixture_coverage": {
+                  "status": "fixture_backed",
+                  "artifacts": [{
+                    "kind": "fixture",
+                    "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+                    "name": "plain-text"
+                  }]
+                },
+                "source_reference": {
+                  "kind": "vttest",
+                  "label": "VTTEST",
+                  "url": "https://invisible-island.net/vttest/"
+                },
+                "platform_measurements": {
+                  "windows": "pass",
+                  "linux": "not_measured",
+                  "macos": "not_measured",
+                  "notes": []
+                },
+                "notes": [],
+                "owner": "terminal-core"
+              }]
+            }"#,
+        )
+        .expect("matrix should be writable");
+
+        let outcome = run(vec![
+            OsString::from("validate-m4-compatibility"),
+            matrix_path.into_os_string(),
+        ]);
+        let _ = fs::remove_dir_all(&root);
+
+        assert_eq!(outcome.code, 0);
+        assert!(outcome.stdout.contains("1 rows"));
+    }
+
+    #[test]
     fn inject_prints_deterministic_snapshot_json() {
         let path = std::env::temp_dir().join(format!("hera-cli-inject-{}.txt", std::process::id()));
         fs::write(&path, b"abc").expect("temp input should be writable");
@@ -1255,6 +1699,61 @@ mod tests {
         assert!(pass.stdout.contains("fixture ok: pass"));
         assert_eq!(fail.code, 1);
         assert!(fail.stderr.contains("snapshot mismatch"));
+    }
+
+    #[test]
+    fn verify_m4_replay_writes_summary_for_directory() {
+        let dir = temp_dir("hera-cli-m4-replay");
+        let output = dir.join("summary.json");
+        let corpus = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("terminal-fixtures")
+            .join("fixtures/m4-replay");
+
+        let outcome = run(vec![
+            OsString::from("verify-m4-replay"),
+            corpus.into_os_string(),
+            OsString::from("--json-output"),
+            output.clone().into_os_string(),
+        ]);
+        let summary = fs::read_to_string(&output).expect("summary should be writable");
+        let _ = fs::remove_dir_all(&dir);
+
+        assert_eq!(outcome.code, 0);
+        assert!(outcome.stdout.contains("3 fixtures"));
+        assert!(summary.contains("\"schema\": \"hera.m4_replay_verification\""));
+        assert!(summary.contains("\"fixture_id\": \"basic-shell\""));
+    }
+
+    #[test]
+    fn export_m4_event_stream_writes_jsonl() {
+        let dir = temp_dir("hera-cli-m4-event-stream");
+        let output = dir.join("basic-shell.jsonl");
+        let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("terminal-fixtures")
+            .join("fixtures/m4-replay")
+            .join("basic-shell.json");
+
+        let outcome = run(vec![
+            OsString::from("export-m4-event-stream"),
+            fixture.into_os_string(),
+            OsString::from("--output"),
+            output.clone().into_os_string(),
+        ]);
+        let stream = fs::read_to_string(&output).expect("stream should be writable");
+        let _ = fs::remove_dir_all(&dir);
+
+        assert_eq!(outcome.code, 0);
+        assert!(
+            stream
+                .lines()
+                .next()
+                .unwrap()
+                .contains("hera.m4_event_stream")
+        );
+        assert!(stream.contains("\"kind\":\"output\""));
+        assert!(!stream.contains("raw_bytes"));
     }
 
     #[test]

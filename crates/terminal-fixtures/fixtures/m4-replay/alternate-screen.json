@@ -1,0 +1,47 @@
+{
+  "schema": "hera.m4_public_replay",
+  "version": 1,
+  "id": "alternate-screen",
+  "title": "Synthetic alternate screen transition",
+  "source": "synthetic",
+  "privacy": "synthetic_public",
+  "generated_at": "2026-07-04T11:49:00Z",
+  "redaction": {
+    "status": "passed",
+    "policy_version": 1,
+    "checked_at": "2026-07-04T11:49:00Z",
+    "reject_patterns": [],
+    "normalized_fields": [
+      "elapsed_ms"
+    ]
+  },
+  "initial_size": {
+    "columns": 80,
+    "rows": 24
+  },
+  "events": [
+    {
+      "kind": "output",
+      "elapsed_ms": 0,
+      "data": "main screen before app\r\n"
+    },
+    {
+      "kind": "output",
+      "elapsed_ms": 12,
+      "data": "\u001b[?1049hfull-screen demo\u001b[2;1Hstatus ok"
+    },
+    {
+      "kind": "marker",
+      "elapsed_ms": 18,
+      "label": "alternate-active"
+    },
+    {
+      "kind": "output",
+      "elapsed_ms": 24,
+      "data": "\u001b[?1049lback on main\r\n"
+    }
+  ],
+  "notes": [
+    "Synthetic public escape sequence coverage for the replay proof package. This is not a private TUI capture."
+  ]
+}

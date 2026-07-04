@@ -15,6 +15,39 @@ use terminal_core::{
     TerminalError, UnsupportedSequenceKind, ViewportRow,
 };
 
+mod m4_compatibility;
+mod m4_evidence;
+mod m4_performance;
+mod m4_replay;
+
+pub use m4_compatibility::{
+    M4_COMPATIBILITY_MATRIX_SCHEMA, M4_COMPATIBILITY_MATRIX_VERSION,
+    M4_MAX_COMPATIBILITY_MATRIX_BYTES, M4CompatibilityArtifact, M4CompatibilityArtifactKind,
+    M4CompatibilityMatrix, M4CompatibilityRow, M4CompatibilityStatus, M4FixtureCoverage,
+    M4FixtureCoverageStatus, M4PlatformMeasurementStatus, M4PlatformMeasurements,
+    M4SourceReference, M4SourceReferenceKind,
+};
+pub use m4_evidence::{
+    M4_EVIDENCE_MANIFEST_SCHEMA, M4_EVIDENCE_MANIFEST_VERSION, M4_MAX_EVIDENCE_MANIFEST_BYTES,
+    M4_MAX_PUBLIC_ARTIFACT_BYTES, M4ArtifactPrivacy, M4EvidenceArtifact, M4EvidenceManifest,
+    M4RedactionPolicy,
+};
+pub use m4_performance::{
+    M4_BENCHMARK_EVIDENCE_SCHEMA, M4_MEMORY_PROFILE_SCHEMA, M4_PERFORMANCE_REPORT_SCHEMA,
+    M4_PERFORMANCE_THRESHOLDS_SCHEMA, M4_PERFORMANCE_VERSION, M4BenchmarkEvidence,
+    M4BenchmarkMeasurement, M4BenchmarkOperation, M4MachineMetadata, M4MemoryProfileEvidence,
+    M4MemoryScenario, M4MetricEvaluation, M4MetricSource, M4MetricThreshold, M4PerformanceReport,
+    M4PerformanceStatus, M4PerformanceThresholds, m4_rollup_status, m4_synthetic_workload,
+};
+pub use m4_replay::{
+    M4_EVENT_STREAM_SCHEMA, M4_MAX_PUBLIC_REPLAY_EVENTS, M4_MAX_PUBLIC_REPLAY_FILE_BYTES,
+    M4_MAX_PUBLIC_REPLAY_OUTPUT_BYTES, M4_PUBLIC_REPLAY_SCHEMA, M4_PUBLIC_REPLAY_VERSION,
+    M4_REPLAY_VERIFICATION_SCHEMA, M4_REPLAY_VERIFICATION_VERSION, M4PublicReplayFixture,
+    M4ReplayEvent, M4ReplayEventCounts, M4ReplayExportError, M4ReplayPrivacy, M4ReplayRedaction,
+    M4ReplayRedactionStatus, M4ReplaySize, M4ReplaySource, M4ReplayVerificationError,
+    M4ReplayVerificationReport, M4ReplayVerificationStatus, M4ReplayVerificationSummary,
+};
+
 pub const M1_MAX_FIXTURE_FILE_BYTES: u64 = 2 * 1024 * 1024;
 pub const M1_MAX_FIXTURES_PER_PACK: usize = 128;
 pub const M1_MAX_CHUNKS_PER_FIXTURE: usize = 4096;

@@ -1,0 +1,25 @@
+{
+  "schema": "hera.m4_paneflow_dogfood_smoke",
+  "version": 1,
+  "generated_at": "2026-07-04T10:59:00Z",
+  "source": "local_paneflow_hera_shadow_test",
+  "working_directory": "<paneflow-repo>",
+  "command": "cargo test -p paneflow-app --features hera-dogfood startup_token_checkpoint_compares_after_shadow_drain",
+  "environment": {
+    "PANEFLOW_HERA_TERMINAL_ROOT": "<hera-repo>",
+    "PANEFLOW_HERA_DOGFOOD": "shadow",
+    "PANEFLOW_HERA_DOGFOOD_ARTIFACT_DIR": "<paneflow-repo>/.paneflow-audit/hera-dogfood/m4-smoke-2026-07-04-ep001",
+    "PANEFLOW_HERA_DOGFOOD_RETENTION": "scrubbed"
+  },
+  "artifact_directory": "<paneflow-repo>/.paneflow-audit/hera-dogfood/m4-smoke-2026-07-04-ep001",
+  "result": {
+    "status": "pass",
+    "tests_passed": 1,
+    "tests_failed": 0,
+    "mismatch_reports": 0
+  },
+  "notes": [
+    "The first exact-filter attempt compiled hera-dogfood but ran 0 tests; it is excluded from the pass claim.",
+    "This is a targeted shadow comparison smoke, not the final M4 public dogfood demo."
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "schema": "hera.m4_paneflow_dogfood_demo",
+  "version": 1,
+  "generated_at": "2026-07-04T12:03:04Z",
+  "status": "pass",
+  "hera_commit": "d897c20",
+  "commands": [
+    {
+      "cwd": "<paneflow-repo>",
+      "command": "cargo check --workspace --features hera-dogfood",
+      "status": "pass"
+    },
+    {
+      "cwd": "<paneflow-repo>",
+      "command": "cargo test --workspace --features hera-dogfood",
+      "status": "pass"
+    },
+    {
+      "cwd": "<paneflow-repo>",
+      "command": "PANEFLOW_HERA_TERMINAL_ROOT=<hera-repo> PANEFLOW_HERA_DOGFOOD=shadow PANEFLOW_HERA_DOGFOOD_ARTIFACT_DIR=<paneflow-repo>/.paneflow-audit/hera-dogfood/m4-public-demo-ep004 PANEFLOW_HERA_DOGFOOD_RETENTION=scrubbed cargo test -p paneflow-app --features hera-dogfood startup_token_checkpoint_compares_after_shadow_drain",
+      "status": "pass"
+    }
+  ],
+  "artifact_directory": "<paneflow-repo>/.paneflow-audit/hera-dogfood/m4-public-demo-ep004",
+  "artifact_directory_created": false,
+  "mismatch_report_files": [],
+  "mismatch_report_count": 0,
+  "raw_local_retention": "none_written_by_targeted_smoke",
+  "notes": [
+    "The targeted shadow smoke passed with zero mismatch report files.",
+    "The configured EP-004 artifact directory was not created because the targeted smoke wrote no mismatch artifacts.",
+    "Raw local dogfood artifacts remain a Paneflow audit concern and are not copied into Hera."
+  ]
+}

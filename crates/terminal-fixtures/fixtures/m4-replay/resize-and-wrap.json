@@ -1,0 +1,43 @@
+{
+  "schema": "hera.m4_public_replay",
+  "version": 1,
+  "id": "resize-and-wrap",
+  "title": "Synthetic resize and wrapped output",
+  "source": "synthetic",
+  "privacy": "synthetic_public",
+  "generated_at": "2026-07-04T11:49:00Z",
+  "redaction": {
+    "status": "passed",
+    "policy_version": 1,
+    "checked_at": "2026-07-04T11:49:00Z",
+    "reject_patterns": [],
+    "normalized_fields": [
+      "elapsed_ms"
+    ]
+  },
+  "initial_size": {
+    "columns": 10,
+    "rows": 4
+  },
+  "events": [
+    {
+      "kind": "output",
+      "elapsed_ms": 0,
+      "data": "abcdefghijabcdefghij\r\n"
+    },
+    {
+      "kind": "resize",
+      "elapsed_ms": 10,
+      "columns": 20,
+      "rows": 4
+    },
+    {
+      "kind": "output",
+      "elapsed_ms": 20,
+      "data": "resize stable\r\n"
+    }
+  ],
+  "notes": [
+    "Synthetic workload checks that normalized timing and resize events do not affect deterministic final snapshot hashing."
+  ]
+}

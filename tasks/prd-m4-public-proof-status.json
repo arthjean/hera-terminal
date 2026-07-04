@@ -1,0 +1,319 @@
+{
+  "prd": {
+    "file": "tasks/prd-m4-public-proof.md",
+    "title": "M4 Public Proof",
+    "created_at": "2026-07-04",
+    "status": "DONE"
+  },
+  "epics": [
+    {
+      "id": "EP-001",
+      "title": "Evidence Baseline And Artifact Contract",
+      "status": "DONE",
+      "priority": "P0",
+      "stories_total": 3,
+      "stories_done": 3
+    },
+    {
+      "id": "EP-002",
+      "title": "Compatibility Matrix",
+      "status": "DONE",
+      "priority": "P0",
+      "stories_total": 3,
+      "stories_done": 3
+    },
+    {
+      "id": "EP-003",
+      "title": "Benchmarks And Memory Proof",
+      "status": "DONE",
+      "priority": "P0",
+      "stories_total": 3,
+      "stories_done": 3
+    },
+    {
+      "id": "EP-004",
+      "title": "Replay And Demo Artifacts",
+      "status": "DONE",
+      "priority": "P0",
+      "stories_total": 3,
+      "stories_done": 3
+    },
+    {
+      "id": "EP-005",
+      "title": "Public API And Package Readiness",
+      "status": "DONE",
+      "priority": "P0",
+      "stories_total": 4,
+      "stories_done": 4
+    },
+    {
+      "id": "EP-006",
+      "title": "Public Proof Report And M5 Recommendation",
+      "status": "DONE",
+      "priority": "P0",
+      "stories_total": 2,
+      "stories_done": 2
+    }
+  ],
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Refresh M3 Baseline For M4",
+      "epic": "EP-001",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "S",
+      "blocked_by": [],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-002",
+      "title": "Define Public Evidence Artifact Layout",
+      "epic": "EP-001",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "S",
+      "blocked_by": [
+        "US-001"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-003",
+      "title": "Add Evidence Manifest And Redaction Policy",
+      "epic": "EP-001",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-002"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-004",
+      "title": "Define Compatibility Matrix Schema",
+      "epic": "EP-002",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-002"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-005",
+      "title": "Map VTTEST And Esctest2 Categories To Hera Fixtures",
+      "epic": "EP-002",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-004"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-006",
+      "title": "Add Cross-Platform Measurement Fields",
+      "epic": "EP-002",
+      "status": "DONE",
+      "priority": "P1",
+      "size": "S",
+      "blocked_by": [
+        "US-004"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-007",
+      "title": "Add M4 Benchmark Harness",
+      "epic": "EP-003",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": [
+        "US-002"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-008",
+      "title": "Add 10k, 100k And 1M Logical-Line Memory Profiles",
+      "epic": "EP-003",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": [
+        "US-007"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-009",
+      "title": "Define Regression Thresholds And Report Generator",
+      "epic": "EP-003",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-007",
+        "US-008"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-010",
+      "title": "Create Scrubbed Replay Demo Corpus",
+      "epic": "EP-004",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-003"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-011",
+      "title": "Add Public Event Stream Export",
+      "epic": "EP-004",
+      "status": "DONE",
+      "priority": "P1",
+      "size": "M",
+      "blocked_by": [
+        "US-010"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-012",
+      "title": "Add Paneflow Dogfood Demo Procedure",
+      "epic": "EP-004",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-001",
+        "US-003"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-013",
+      "title": "Add Public API Examples",
+      "epic": "EP-005",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-002"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-014",
+      "title": "Audit API Against Rust API Guidelines",
+      "epic": "EP-005",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-013"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-015",
+      "title": "Run Package And Docs Readiness Checks",
+      "epic": "EP-005",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-014"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-016",
+      "title": "Add OSS Security Health Baseline",
+      "epic": "EP-005",
+      "status": "DONE",
+      "priority": "P1",
+      "size": "M",
+      "blocked_by": [
+        "US-002"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-017",
+      "title": "Write M4 Public Proof Report",
+      "epic": "EP-006",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": [
+        "US-003",
+        "US-004",
+        "US-007",
+        "US-008",
+        "US-010",
+        "US-012",
+        "US-013",
+        "US-015"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-018",
+      "title": "Update Milestone Docs And M5 Recommendation",
+      "epic": "EP-006",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-017"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    }
+  ]
+}

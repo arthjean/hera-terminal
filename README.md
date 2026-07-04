@@ -207,7 +207,7 @@ Cloner les repos de reference et mapper:
 
 Output: `docs/research-map.md`.
 
-### M1: Prototype Core Headless
+### M1: Prototype Core Headless (DONE)
 
 Construire un workspace Rust headless capable de:
 
@@ -239,7 +239,7 @@ Output livre: `terminal-cli run <command>` execute via PTY, dump le snapshot
 final, peut enregistrer un recording PTY et dispose de replays offline
 deterministes via `terminal-fixtures`.
 
-### M3: Dogfood Paneflow
+### M3: Dogfood Paneflow (DONE)
 
 Ajouter une integration Paneflow derriere feature flag:
 
@@ -249,18 +249,16 @@ Ajouter une integration Paneflow derriere feature flag:
 - comparer le comportement au chemin actuel base sur Alacritty
 - capturer de longues sessions Codex CLI et Claude Code
 
-Output cible: branche Paneflow avec validation side-by-side, longues sessions
+Output livre: branche Paneflow avec validation side-by-side, longues sessions
 Codex/Claude capturees, mesures memoire et liste des ecarts avant toute surface
 terminal productisee.
 
-Gate de decision: `docs/m3-paneflow-dogfood-report.md`. Tant que les vraies
-captures locales Codex/Claude, les mesures RSS/latence et les mismatches P0 ne
-sont pas expliques, la recommandation reste de continuer le dogfood au lieu de
-remplacer le chemin terminal Paneflow.
+Gate de decision: `docs/m3-paneflow-dogfood-report.md`. M3 a prouve le chemin
+dogfood en shadow mode, avec des limites historiques gardees visibles pour M4.
 
-### M4: Public Proof
+### M4: Public Proof (DONE)
 
-Publier l'engine quand il peut montrer:
+Rendre l'engine evaluable publiquement quand il peut montrer:
 
 - matrice de compatibilite
 - benchmarks
@@ -268,6 +266,29 @@ Publier l'engine quand il peut montrer:
 - demo de replay
 - demo d'integration Paneflow
 - exemple clair d'API
+
+Les exemples publics M4 vivent dans
+`crates/terminal-core/examples/headless_embedder.rs` et
+`crates/terminal-pty/examples/pty_boundary.rs`. Le rapport de readiness est
+`docs/m4-api-and-package-readiness.md`. Le rapport public final est
+`docs/m4-public-proof-report.md`.
+
+M4 se termine avec une preuve publique partielle: replay deterministe, memoire
+bornee, exemples API et discipline de redaction sont solides; compatibilite VT,
+mesures Linux/macOS, packaging public, Scorecard et dogfood longue session
+restent des gaps explicites.
+
+### M5: Compatibility And Release Hardening (RECOMMENDED)
+
+Le prochain chantier recommande est de durcir la compatibilite et la readiness
+avant toute experience de remplacement Paneflow:
+
+- etendre les fixtures CSI, ED/EL/ECH et DEC private modes
+- ajouter des mesures Linux et macOS reelles
+- produire des replays scrubbed issus de vraies sessions Codex et Claude Code
+- completer metadata, noms de crates et ordre de publication
+- lancer un baseline OpenSSF Scorecard quand le repo public le permet
+- refaire un dogfood Paneflow shadow plus long avec sortie rapide
 
 ## Questions Dures
 
@@ -295,6 +316,6 @@ Avant publication publique, verifier au minimum:
 ## Intention Du Dossier
 
 Ce dossier commence comme brief projet et hub de recherche. Il est maintenant
-le workspace Rust Hera, avec M2 `terminal-pty` livre. La suite naturelle est
-M3: dogfood Paneflow side-by-side, mesure et capture de longues sessions avant
-renderer ou app terminal complete.
+le workspace Rust Hera, avec M4 public proof livre. La suite naturelle est M5:
+compatibilite, release readiness et dogfood public-safe plus large avant
+renderer, app terminal complete ou remplacement du chemin terminal Paneflow.

@@ -1,0 +1,59 @@
+{
+  "schema": "hera.m4_oss_security_baseline",
+  "version": 1,
+  "generated_at": "2026-07-04T12:18:00Z",
+  "hera_commit": "d897c20",
+  "status": "partial",
+  "sources": [
+    {
+      "label": "OpenSSF Scorecard",
+      "url": "https://scorecard.dev/"
+    },
+    {
+      "label": "OpenSSF Scorecard checks",
+      "url": "https://github.com/ossf/scorecard/blob/main/docs/checks.md"
+    }
+  ],
+  "checks": [
+    {
+      "id": "security.locked_metadata",
+      "command": "cargo metadata --locked --no-deps --format-version 1",
+      "exit_code": 0,
+      "status": "pass",
+      "summary": "Workspace metadata resolved with 6 workspace packages and 8 direct registry dependencies."
+    },
+    {
+      "id": "security.duplicate_dependency_versions",
+      "command": "cargo tree --locked --duplicates",
+      "exit_code": 0,
+      "status": "partial",
+      "summary": "bitflags appears as 1.3.2 and 2.13.0 through portable-pty and nix; this is indirect and non-blocking for M4."
+    },
+    {
+      "id": "security.binary_artifacts",
+      "command": "rg --files -g '!target' | Select-String -Pattern '\\.(exe|dll|pdb|so|dylib|a|lib)$'",
+      "exit_code": 0,
+      "status": "pass",
+      "summary": "No executable, dynamic library or static library artifacts are present outside target."
+    },
+    {
+      "id": "security.secret_like_scan",
+      "command": "rg -n --hidden -g '!target' selected high-confidence credential patterns",
+      "exit_code": 0,
+      "status": "pass",
+      "summary": "Only redaction-policy marker literals were matched in crates/terminal-fixtures/src/m4_replay.rs:34-35; no token material was found."
+    },
+    {
+      "id": "security.openssf_scorecard_cli",
+      "command": "scorecard --repo <public-repo-url> --format=json",
+      "exit_code": null,
+      "status": "blocked",
+      "summary": "Scorecard CLI is not installed locally, so no external OpenSSF score is claimed."
+    }
+  ],
+  "security_verdict": {
+    "internal_posture": "pass_with_gaps",
+    "external_scorecard": "not_measured",
+    "blocking_findings": []
+  }
+}
