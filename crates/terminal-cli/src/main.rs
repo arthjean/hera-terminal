@@ -79,6 +79,10 @@ impl CommandOutcome {
 }
 
 fn run(args: Vec<OsString>) -> CommandOutcome {
+    if args.is_empty() {
+        return CommandOutcome::success(usage());
+    }
+
     let Some(command) = args.first().and_then(|value| value.to_str()) else {
         return CommandOutcome::failure(2, usage());
     };
@@ -812,7 +816,7 @@ fn one_path_arg(args: &[OsString]) -> Option<PathBuf> {
 }
 
 fn usage() -> &'static str {
-    "usage: terminal-cli <inject|replay|compare|run> ..."
+    "usage: terminal-cli <inject|replay|compare|run> ...\n\nexamples:\n  terminal-cli run -- <program> [args...]\n  terminal-cli run --shell --command \"<command>\""
 }
 
 fn required_value(
@@ -1119,6 +1123,15 @@ mod tests {
             super::M2_CLI_MAX_RECORDING_OUTPUT_BYTES
         );
         assert!(metadata.output_truncated);
+    }
+
+    #[test]
+    fn top_level_without_args_returns_usage_success() {
+        let outcome = run(args(&[]));
+
+        assert_eq!(outcome.code, 0);
+        assert!(outcome.stdout.starts_with("usage: terminal-cli"));
+        assert!(outcome.stderr.is_empty());
     }
 
     #[test]

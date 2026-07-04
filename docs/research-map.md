@@ -1,6 +1,6 @@
 # Research Map
 
-Status: M2 boundary update
+Status: M2 complete, M3 planning boundary
 Date: 2026-07-03
 Scope: architecture research for `Hera`, not implementation.
 
@@ -17,15 +17,15 @@ The key decision: Hera must own terminal semantics. A parser such as
 meaning to escape sequences. The state machine, grids, scrollback, modes,
 alternate screen, reflow, semantic timeline and snapshots belong in Hera.
 
-Recommended M1 bias:
+Current architecture bias:
 
 1. Wrap `alacritty/vte` first, behind a Hera parser boundary.
 2. Model `Terminal { state, parser }`, closer to WezTerm than to app-first
    terminals.
 3. Start with an Alacritty/Rio-style grid for simplicity, but design stable row
    IDs and page/chunk storage early so huge scrollbacks do not become a rewrite.
-4. Keep PTY outside `terminal-core`. Use a `terminal-pty` crate with a
-   `portable-pty`-style trait surface.
+4. Keep PTY outside `terminal-core`. The M2 `terminal-pty` crate owns
+   `portable-pty`, process IO, resize, lifecycle and platform quirks.
 5. Make render output a snapshot/damage model, not a renderer callback API.
 6. Treat semantic session intelligence as an observer sidecar. It can be wrong
    without breaking terminal correctness.
@@ -1152,26 +1152,29 @@ These are the public specs/docs worth keeping near the repo:
 | Smallest Paneflow API? | Byte ingestion, render snapshot, viewport query, snapshot/replay, semantic observer events. No Paneflow types. |
 | Tests beyond local confidence? | Upstream-inspired golden fixtures, xterm/VTTEST/esctest2 corpus, fuzzing, ConPTY replay corpus and memory benchmarks. |
 
-## Next Implementation Step
+## M2 Closeout And Next Step
 
-The M2 runtime boundary is open. The next implementation step is to wire
-`terminal-cli run <command>` through the PTY harness without weakening the
-headless core:
+M2 is complete: `terminal-cli run <command>` executes through the PTY harness,
+feeds bytes into `terminal-core`, preserves the headless core boundary, emits a
+final snapshot artifact and can write deterministic `hera.pty_recording`
+recordings. Offline PTY replay is owned by `terminal-fixtures`.
 
-1. `terminal-core`
-2. `terminal-protocol`
-3. `terminal-render-model`
-4. `terminal-fixtures`
-5. `terminal-cli`
-6. `terminal-pty`
+`terminal-core` remains PTY-free and continues to own parser semantics, visible
+state, alternate screen, resize, snapshots and byte ingestion. `terminal-pty`
+owns `portable-pty`, process IO, resize, lifecycle and platform quirks. Direct
+command mode must pass program and args as argv, never by joining a shell
+string. Shell interpretation belongs only behind explicit shell mode, and OSC or
+other terminal payloads must never execute host commands.
 
-`terminal-pty` owns `portable-pty`, process IO, resize, lifecycle and platform
-quirks. `terminal-core` remains PTY-free and continues to own parser semantics,
-visible state, alternate screen, resize, snapshots and byte ingestion. Paneflow
-dogfood stays M3, after `terminal-cli run <command>` can execute through PTY and
-dump deterministic snapshots. Direct command mode must pass program and args as
-argv, never by joining a shell string. Shell interpretation belongs only behind
-explicit shell mode, and OSC or other terminal payloads must never execute host
-commands. Default shell selection is deterministic: Windows tries `COMSPEC`,
-then `cmd.exe`, `powershell.exe` and `pwsh.exe`; Unix tries `$SHELL`, then
-`/bin/sh`.
+The active M3 decision gate is `docs/m3-paneflow-dogfood-report.md`. Paneflow
+dogfood remains behind a feature flag and runtime opt-in, while Hera keeps
+checked-in evidence to scrubbed or synthetic recordings and metrics summaries.
+
+The current recommendation is continue dogfood, not replace Paneflow's terminal
+path. M4 should only move toward replacement after real local Codex/Claude
+captures produce measured RSS, latency and mismatch evidence within budget.
+
+Known non-blocking follow-up: `terminal-cli replay` still targets M1 fixture
+packs. PTY recordings replay through `terminal-fixtures`; a dedicated CLI entry
+for PTY and M3 dogfood recordings can be added when that improves dogfood
+ergonomics.

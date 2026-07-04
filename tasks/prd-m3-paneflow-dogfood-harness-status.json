@@ -1,0 +1,315 @@
+{
+  "prd": {
+    "file": "tasks/prd-m3-paneflow-dogfood-harness.md",
+    "title": "M3 Paneflow Dogfood Harness",
+    "created_at": "2026-07-03",
+    "status": "DONE"
+  },
+  "epics": [
+    {
+      "id": "EP-001",
+      "title": "Feature-Flagged Integration Boundary",
+      "status": "DONE",
+      "priority": "P0",
+      "stories_total": 3,
+      "stories_done": 3
+    },
+    {
+      "id": "EP-002",
+      "title": "Shadow Core From Paneflow PTY Events",
+      "status": "DONE",
+      "priority": "P0",
+      "stories_total": 4,
+      "stories_done": 4
+    },
+    {
+      "id": "EP-003",
+      "title": "Snapshot Comparator And Replay Evidence",
+      "status": "DONE",
+      "priority": "P0",
+      "stories_total": 4,
+      "stories_done": 4
+    },
+    {
+      "id": "EP-004",
+      "title": "Minimal GPUI Render Adapter",
+      "status": "DONE",
+      "priority": "P0",
+      "stories_total": 4,
+      "stories_done": 4
+    },
+    {
+      "id": "EP-005",
+      "title": "Long-Session Dogfood And Go/No-Go Report",
+      "status": "DONE",
+      "priority": "P0",
+      "stories_total": 3,
+      "stories_done": 3
+    }
+  ],
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Add Paneflow `hera-dogfood` Feature And Local Hera Dependencies",
+      "epic": "EP-001",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [],
+      "started_at": "2026-07-03",
+      "completed_at": "2026-07-03",
+      "reviewed_at": null
+    },
+    {
+      "id": "US-002",
+      "title": "Define Paneflow Hera Adapter Module Boundary",
+      "epic": "EP-001",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "S",
+      "blocked_by": [
+        "US-001"
+      ],
+      "started_at": "2026-07-03",
+      "completed_at": "2026-07-03",
+      "reviewed_at": null
+    },
+    {
+      "id": "US-003",
+      "title": "Add Runtime Opt-In And Diagnostics Gate",
+      "epic": "EP-001",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "S",
+      "blocked_by": [
+        "US-001",
+        "US-002"
+      ],
+      "started_at": "2026-07-03",
+      "completed_at": "2026-07-03",
+      "reviewed_at": null
+    },
+    {
+      "id": "US-004",
+      "title": "Tap PTY Output Into Hera Shadow Session",
+      "epic": "EP-002",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": [
+        "US-002",
+        "US-003"
+      ],
+      "started_at": "2026-07-03",
+      "completed_at": "2026-07-03",
+      "reviewed_at": null
+    },
+    {
+      "id": "US-005",
+      "title": "Mirror Resize And Dimension Policy",
+      "epic": "EP-002",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-004"
+      ],
+      "started_at": "2026-07-03",
+      "completed_at": "2026-07-03",
+      "reviewed_at": null
+    },
+    {
+      "id": "US-006",
+      "title": "Mirror Input Metadata Without Double-Writing PTY",
+      "epic": "EP-002",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-004"
+      ],
+      "started_at": "2026-07-03",
+      "completed_at": "2026-07-03",
+      "reviewed_at": null
+    },
+    {
+      "id": "US-007",
+      "title": "Isolate Shadow Lifecycle Failures",
+      "epic": "EP-002",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-004",
+        "US-005",
+        "US-006"
+      ],
+      "started_at": "2026-07-03",
+      "completed_at": "2026-07-03",
+      "reviewed_at": null
+    },
+    {
+      "id": "US-008",
+      "title": "Define Neutral Comparison Summary",
+      "epic": "EP-003",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-004",
+        "US-005"
+      ],
+      "started_at": "2026-07-03",
+      "completed_at": "2026-07-03",
+      "reviewed_at": null
+    },
+    {
+      "id": "US-009",
+      "title": "Add Runtime Diff Counters And Local Report Files",
+      "epic": "EP-003",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-008"
+      ],
+      "started_at": "2026-07-03",
+      "completed_at": "2026-07-03",
+      "reviewed_at": null
+    },
+    {
+      "id": "US-010",
+      "title": "Capture M3 Dogfood Recordings",
+      "epic": "EP-003",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": [
+        "US-004",
+        "US-005",
+        "US-006",
+        "US-009"
+      ],
+      "started_at": "2026-07-03",
+      "completed_at": "2026-07-03",
+      "reviewed_at": null
+    },
+    {
+      "id": "US-011",
+      "title": "Add Replay Tests For Captured Dogfood Fixtures",
+      "epic": "EP-003",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-010"
+      ],
+      "started_at": "2026-07-03",
+      "completed_at": "2026-07-03",
+      "reviewed_at": null
+    },
+    {
+      "id": "US-012",
+      "title": "Map Hera RenderSnapshot To Paneflow Layout Inputs",
+      "epic": "EP-004",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": [
+        "US-008"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-013",
+      "title": "Add Hera Window-Free Golden Corpus",
+      "epic": "EP-004",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-012"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-014",
+      "title": "Add Diagnostic Side-By-Side Render Surface",
+      "epic": "EP-004",
+      "status": "DONE",
+      "priority": "P1",
+      "size": "L",
+      "blocked_by": [
+        "US-012",
+        "US-013"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-015",
+      "title": "Route Resize, Focus And Basic Input Through Existing Paneflow Controls",
+      "epic": "EP-004",
+      "status": "DONE",
+      "priority": "P1",
+      "size": "M",
+      "blocked_by": [
+        "US-014"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-016",
+      "title": "Capture Codex And Claude Code Long Sessions",
+      "epic": "EP-005",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": [
+        "US-010",
+        "US-011"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-017",
+      "title": "Measure Memory, Latency And Diff Rate",
+      "epic": "EP-005",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-009",
+        "US-016"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    },
+    {
+      "id": "US-018",
+      "title": "Write M3 Go/No-Go Report",
+      "epic": "EP-005",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": [
+        "US-011",
+        "US-013",
+        "US-017"
+      ],
+      "started_at": "2026-07-04",
+      "completed_at": "2026-07-04",
+      "reviewed_at": "2026-07-04"
+    }
+  ]
+}

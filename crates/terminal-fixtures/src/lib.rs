@@ -33,6 +33,17 @@ pub const M2_MAX_PTY_RECORDING_FILE_BYTES: u64 = 8 * 1024 * 1024;
 pub const M2_MAX_PTY_RECORDING_EVENTS: usize = 8192;
 pub const M2_MAX_PTY_RECORDING_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
 pub const M2_MAX_PTY_RECORDING_EVENT_BYTES: usize = 1024 * 1024;
+pub const M3_DOGFOOD_RECORDING_SCHEMA: &str = "hera.m3_dogfood_recording";
+pub const M3_DOGFOOD_RECORDING_VERSION: u32 = 1;
+pub const M3_MAX_DOGFOOD_RECORDING_FILE_BYTES: u64 = 80 * 1024 * 1024;
+pub const M3_MAX_DOGFOOD_RECORDING_EVENTS: usize = 65_536;
+pub const M3_MAX_DOGFOOD_RECORDING_OUTPUT_BYTES: usize = 64 * 1024 * 1024;
+pub const M3_DOGFOOD_METRICS_SCHEMA: &str = "hera.m3_dogfood_metrics";
+pub const M3_DOGFOOD_METRICS_VERSION: u32 = 1;
+pub const M3_MAX_DOGFOOD_METRICS_FILE_BYTES: u64 = 1024 * 1024;
+pub const M3_LONG_SESSION_MIN_LOGICAL_LINES: usize = 10_000;
+pub const M3_BATCH_P95_BUDGET_MS: f64 = 2.0;
+pub const M3_10K_MEMORY_DELTA_BUDGET_BYTES: i64 = 64 * 1024 * 1024;
 
 #[derive(Debug, Clone)]
 pub struct FixturePack {
@@ -1233,6 +1244,622 @@ pub enum PtyRecordingEvent {
     },
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct M3DogfoodRecording {
+    pub schema: String,
+    pub version: u32,
+    pub metadata: M3DogfoodMetadata,
+    pub events: Vec<M3DogfoodEvent>,
+    pub final_snapshot: M3DogfoodFinalSnapshot,
+}
+
+impl M3DogfoodRecording {
+    pub fn from_path(path: impl AsRef<Path>) -> Result<Self, FixtureLoadError> {
+        let path = path.as_ref();
+        let raw = read_m3_dogfood_recording_file_capped(path)?;
+        Self::from_json_str(path, &raw)
+    }
+
+    pub fn from_json_str(path: impl AsRef<Path>, json: &str) -> Result<Self, FixtureLoadError> {
+        let path = path.as_ref().to_path_buf();
+        if json.len() as u64 > M3_MAX_DOGFOOD_RECORDING_FILE_BYTES {
+            return Err(invalid_schema(
+                &path,
+                "$",
+                format!(
+                    "M3 dogfood recording JSON is {} bytes, maximum is {M3_MAX_DOGFOOD_RECORDING_FILE_BYTES}",
+                    json.len()
+                ),
+            ));
+        }
+
+        let mut deserializer = serde_json::Deserializer::from_str(json);
+        let recording: Self =
+            serde_path_to_error::deserialize(&mut deserializer).map_err(|error| {
+                recording_schema_error(&path, &error.path().to_string(), &error.inner().to_string())
+            })?;
+        recording.validate(&path)?;
+        Ok(recording)
+    }
+
+    pub fn replay(&self) -> Result<M3DogfoodReplayReport, M3DogfoodReplayError> {
+        let first = self.replay_once()?;
+        if let Some(difference) = self
+            .final_snapshot
+            .first_difference(&M3DogfoodFinalSnapshot::from_snapshot(&first.snapshot))
+        {
+            return Err(M3DogfoodReplayError::SnapshotMismatch(difference));
+        }
+
+        let second = self.replay_once()?;
+        if first.snapshot_bytes != second.snapshot_bytes {
+            return Err(M3DogfoodReplayError::NondeterministicSnapshot {
+                first_bytes: first.snapshot_bytes.len(),
+                second_bytes: second.snapshot_bytes.len(),
+            });
+        }
+
+        Ok(first)
+    }
+
+    fn replay_once(&self) -> Result<M3DogfoodReplayReport, M3DogfoodReplayError> {
+        let initial = self.metadata.initial_dimensions;
+        let config = TerminalConfig::new(initial.columns, initial.rows).map_err(|error| {
+            M3DogfoodReplayError::TerminalConfig {
+                message: error.to_string(),
+            }
+        })?;
+        let mut terminal = Terminal::with_config(config);
+
+        for event in &self.events {
+            match event {
+                M3DogfoodEvent::Output { bytes, .. } => terminal.advance_bytes(bytes),
+                M3DogfoodEvent::Resize { columns, rows, .. } => terminal
+                    .resize(*columns, *rows)
+                    .map_err(|error| M3DogfoodReplayError::TerminalConfig {
+                        message: error.to_string(),
+                    })?,
+                M3DogfoodEvent::Input { .. } | M3DogfoodEvent::Lifecycle { .. } => {}
+            }
+        }
+
+        let snapshot = snapshot_terminal(&mut terminal);
+        let snapshot_bytes = serialize_snapshot(&snapshot)?;
+        Ok(M3DogfoodReplayReport {
+            snapshot,
+            snapshot_bytes,
+        })
+    }
+
+    fn validate(&self, path: &Path) -> Result<(), FixtureLoadError> {
+        if self.schema != M3_DOGFOOD_RECORDING_SCHEMA {
+            return Err(invalid_schema(
+                path,
+                "schema",
+                format!("expected {M3_DOGFOOD_RECORDING_SCHEMA}"),
+            ));
+        }
+        if self.version != M3_DOGFOOD_RECORDING_VERSION {
+            return Err(invalid_schema(
+                path,
+                "version",
+                format!("expected {M3_DOGFOOD_RECORDING_VERSION}"),
+            ));
+        }
+        validate_m3_dimensions(
+            path,
+            "metadata.initial_dimensions",
+            self.metadata.initial_dimensions,
+        )?;
+        validate_m3_dimensions(
+            path,
+            "final_snapshot.dimensions",
+            self.final_snapshot.dimensions,
+        )?;
+        if self.metadata.source.trim().is_empty() {
+            return Err(invalid_schema(
+                path,
+                "metadata.source",
+                "source is required",
+            ));
+        }
+        if self.events.len() > M3_MAX_DOGFOOD_RECORDING_EVENTS {
+            return Err(invalid_schema(
+                path,
+                "events",
+                format!(
+                    "recording has {} events, maximum is {M3_MAX_DOGFOOD_RECORDING_EVENTS}",
+                    self.events.len()
+                ),
+            ));
+        }
+        if self.metadata.max_output_bytes > M3_MAX_DOGFOOD_RECORDING_OUTPUT_BYTES {
+            return Err(invalid_schema(
+                path,
+                "metadata.max_output_bytes",
+                format!("maximum is {M3_MAX_DOGFOOD_RECORDING_OUTPUT_BYTES}"),
+            ));
+        }
+        if self.final_snapshot.viewport_lines.len() != self.final_snapshot.dimensions.rows {
+            return Err(invalid_schema(
+                path,
+                "final_snapshot.viewport_lines",
+                format!("expected {} rows", self.final_snapshot.dimensions.rows),
+            ));
+        }
+
+        let mut counts = M3DogfoodEventCounts::default();
+        let mut output_bytes = 0usize;
+        for (index, event) in self.events.iter().enumerate() {
+            match event {
+                M3DogfoodEvent::Output { bytes, .. } => {
+                    counts.output = counts.output.saturating_add(1);
+                    output_bytes = output_bytes.checked_add(bytes.len()).ok_or_else(|| {
+                        invalid_schema(path, "events", "output byte count overflowed")
+                    })?;
+                }
+                M3DogfoodEvent::Input { .. } => {
+                    counts.input = counts.input.saturating_add(1);
+                }
+                M3DogfoodEvent::Resize { columns, rows, .. } => {
+                    counts.resize = counts.resize.saturating_add(1);
+                    validate_m3_dimensions(
+                        path,
+                        format!("events[{index}]"),
+                        M3DogfoodDimensions::new(*columns, *rows),
+                    )?;
+                }
+                M3DogfoodEvent::Lifecycle { .. } => {
+                    counts.lifecycle = counts.lifecycle.saturating_add(1);
+                }
+            }
+        }
+
+        if counts != self.metadata.event_counts {
+            return Err(invalid_schema(
+                path,
+                "metadata.event_counts",
+                "event counts do not match events",
+            ));
+        }
+        if output_bytes != self.metadata.output_bytes {
+            return Err(invalid_schema(
+                path,
+                "metadata.output_bytes",
+                format!("expected recorded output byte count {output_bytes}"),
+            ));
+        }
+        if output_bytes > self.metadata.max_output_bytes {
+            return Err(invalid_schema(
+                path,
+                "events",
+                format!(
+                    "recording output is {output_bytes} bytes, maximum is {}",
+                    self.metadata.max_output_bytes
+                ),
+            ));
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct M3DogfoodMetadata {
+    pub source: String,
+    pub initial_dimensions: M3DogfoodDimensions,
+    pub event_counts: M3DogfoodEventCounts,
+    pub redaction_status: M3DogfoodRedactionStatus,
+    pub output_bytes: usize,
+    pub output_truncated: bool,
+    pub max_output_bytes: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct M3DogfoodDimensions {
+    pub columns: usize,
+    pub rows: usize,
+}
+
+impl M3DogfoodDimensions {
+    #[must_use]
+    pub const fn new(columns: usize, rows: usize) -> Self {
+        Self { columns, rows }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct M3DogfoodEventCounts {
+    pub output: u64,
+    pub input: u64,
+    pub resize: u64,
+    pub lifecycle: u64,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum M3DogfoodRedactionStatus {
+    RawLocal,
+    Scrubbed,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum M3DogfoodEvent {
+    Output {
+        elapsed_ms: u64,
+        bytes: Vec<u8>,
+    },
+    Input {
+        elapsed_ms: u64,
+        byte_count: usize,
+        escaped_summary: String,
+        truncated: bool,
+    },
+    Resize {
+        elapsed_ms: u64,
+        columns: usize,
+        rows: usize,
+    },
+    Lifecycle {
+        elapsed_ms: u64,
+        state: String,
+        exit_code: Option<i32>,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct M3DogfoodFinalSnapshot {
+    pub dimensions: M3DogfoodDimensions,
+    pub active_screen: SnapshotScreen,
+    pub cursor: SnapshotCursor,
+    pub viewport_lines: Vec<String>,
+    pub scrollback_line_count: usize,
+}
+
+impl M3DogfoodFinalSnapshot {
+    fn from_snapshot(snapshot: &TerminalSnapshot) -> Self {
+        Self {
+            dimensions: M3DogfoodDimensions::new(snapshot.columns, snapshot.rows),
+            active_screen: snapshot.active_screen,
+            cursor: snapshot.cursor,
+            viewport_lines: snapshot
+                .viewport_rows
+                .iter()
+                .map(SnapshotRow::text)
+                .collect(),
+            scrollback_line_count: snapshot.scrollback_rows.len(),
+        }
+    }
+
+    fn first_difference(&self, right: &Self) -> Option<SnapshotDifference> {
+        diff_value("$.dimensions", self.dimensions, right.dimensions)
+            .or_else(|| diff_value("$.active_screen", self.active_screen, right.active_screen))
+            .or_else(|| diff_value("$.cursor", self.cursor, right.cursor))
+            .or_else(|| {
+                diff_text_lines(
+                    "$.viewport_lines",
+                    &self.viewport_lines,
+                    &right.viewport_lines,
+                )
+            })
+            .or_else(|| {
+                diff_value(
+                    "$.scrollback_line_count",
+                    self.scrollback_line_count,
+                    right.scrollback_line_count,
+                )
+            })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct M3DogfoodReplayReport {
+    snapshot: TerminalSnapshot,
+    snapshot_bytes: Vec<u8>,
+}
+
+impl M3DogfoodReplayReport {
+    #[must_use]
+    pub const fn snapshot(&self) -> &TerminalSnapshot {
+        &self.snapshot
+    }
+
+    #[must_use]
+    pub fn snapshot_bytes(&self) -> &[u8] {
+        &self.snapshot_bytes
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum M3DogfoodReplayError {
+    TerminalConfig {
+        message: String,
+    },
+    SnapshotMismatch(SnapshotDifference),
+    NondeterministicSnapshot {
+        first_bytes: usize,
+        second_bytes: usize,
+    },
+    SnapshotCodec(SnapshotCodecError),
+}
+
+impl fmt::Display for M3DogfoodReplayError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::TerminalConfig { message } => {
+                write!(
+                    formatter,
+                    "M3 dogfood replay has invalid terminal config: {message}"
+                )
+            }
+            Self::SnapshotMismatch(difference) => {
+                write!(formatter, "M3 dogfood replay mismatch: {difference}")
+            }
+            Self::NondeterministicSnapshot {
+                first_bytes,
+                second_bytes,
+            } => write!(
+                formatter,
+                "M3 dogfood replay was nondeterministic: first {first_bytes} bytes, second {second_bytes} bytes"
+            ),
+            Self::SnapshotCodec(error) => write!(formatter, "{error}"),
+        }
+    }
+}
+
+impl std::error::Error for M3DogfoodReplayError {}
+
+impl From<SnapshotCodecError> for M3DogfoodReplayError {
+    fn from(value: SnapshotCodecError) -> Self {
+        Self::SnapshotCodec(value)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct M3DogfoodMetricsReport {
+    pub schema: String,
+    pub version: u32,
+    pub pane_id: String,
+    pub timestamp_ms: u128,
+    pub source: String,
+    pub redaction_status: M3DogfoodRedactionStatus,
+    pub session: M3DogfoodSessionMetrics,
+    pub memory: M3DogfoodMemoryMetrics,
+    pub latency: M3DogfoodLatencyMetrics,
+    pub diff_counters: M3DogfoodDiffCounters,
+    pub decision: M3DogfoodMetricsDecision,
+}
+
+impl M3DogfoodMetricsReport {
+    pub fn from_path(path: impl AsRef<Path>) -> Result<Self, FixtureLoadError> {
+        let path = path.as_ref();
+        let raw = read_m3_dogfood_metrics_file_capped(path)?;
+        Self::from_json_str(path, &raw)
+    }
+
+    pub fn from_json_str(path: impl AsRef<Path>, json: &str) -> Result<Self, FixtureLoadError> {
+        let path = path.as_ref().to_path_buf();
+        if json.len() as u64 > M3_MAX_DOGFOOD_METRICS_FILE_BYTES {
+            return Err(invalid_schema(
+                &path,
+                "$",
+                format!(
+                    "M3 dogfood metrics JSON is {} bytes, maximum is {M3_MAX_DOGFOOD_METRICS_FILE_BYTES}",
+                    json.len()
+                ),
+            ));
+        }
+
+        let mut deserializer = serde_json::Deserializer::from_str(json);
+        let report: Self =
+            serde_path_to_error::deserialize(&mut deserializer).map_err(|error| {
+                recording_schema_error(&path, &error.path().to_string(), &error.inner().to_string())
+            })?;
+        report.validate(&path)?;
+        Ok(report)
+    }
+
+    fn validate(&self, path: &Path) -> Result<(), FixtureLoadError> {
+        if self.schema != M3_DOGFOOD_METRICS_SCHEMA {
+            return Err(invalid_schema(
+                path,
+                "schema",
+                format!("expected {M3_DOGFOOD_METRICS_SCHEMA}"),
+            ));
+        }
+        if self.version != M3_DOGFOOD_METRICS_VERSION {
+            return Err(invalid_schema(
+                path,
+                "version",
+                format!("expected {M3_DOGFOOD_METRICS_VERSION}"),
+            ));
+        }
+        if self.pane_id.trim().is_empty() {
+            return Err(invalid_schema(path, "pane_id", "pane id is required"));
+        }
+        if self.source.trim().is_empty() {
+            return Err(invalid_schema(path, "source", "source is required"));
+        }
+        validate_m3_dimensions(
+            path,
+            "session.initial_dimensions",
+            self.session.initial_dimensions,
+        )?;
+        if let Some(dimensions) = self.session.final_dimensions {
+            validate_m3_dimensions(path, "session.final_dimensions", dimensions)?;
+        }
+        if self.session.logical_output_lines < M3_LONG_SESSION_MIN_LOGICAL_LINES {
+            return Err(invalid_schema(
+                path,
+                "session.logical_output_lines",
+                format!("expected at least {M3_LONG_SESSION_MIN_LOGICAL_LINES} logical lines"),
+            ));
+        }
+        if self.session.recording_output_bytes > self.session.max_output_bytes {
+            return Err(invalid_schema(
+                path,
+                "session.recording_output_bytes",
+                "stored recording bytes exceed the configured cap",
+            ));
+        }
+        if self.session.output_truncated
+            && self.session.observed_output_bytes < self.session.recording_output_bytes
+        {
+            return Err(invalid_schema(
+                path,
+                "session.observed_output_bytes",
+                "observed bytes must not be smaller than stored recording bytes",
+            ));
+        }
+        if !self.session.output_truncated
+            && self.session.observed_output_bytes != self.session.recording_output_bytes
+        {
+            return Err(invalid_schema(
+                path,
+                "session.recording_output_bytes",
+                "untruncated metrics must store every observed output byte",
+            ));
+        }
+        if self.latency.pty_batch_samples == 0
+            && !matches!(
+                self.latency.pty_batch_p95_ms,
+                M3MetricMeasurement::NotMeasured { .. }
+            )
+        {
+            return Err(invalid_schema(
+                path,
+                "latency.pty_batch_p95_ms",
+                "P95 must be not_measured when there are no samples",
+            ));
+        }
+
+        let replacement_blockers = self.replacement_blockers();
+        if replacement_blockers.is_empty() {
+            if self.decision.replacement_blocked {
+                return Err(invalid_schema(
+                    path,
+                    "decision.replacement_blocked",
+                    "replacement is blocked without a measured blocker",
+                ));
+            }
+        } else if !self.decision.replacement_blocked || self.decision.blocked_reasons.is_empty() {
+            return Err(invalid_schema(
+                path,
+                "decision",
+                "replacement blockers must be explicit",
+            ));
+        }
+
+        Ok(())
+    }
+
+    fn replacement_blockers(&self) -> Vec<String> {
+        let mut blockers = Vec::new();
+        match self.memory.dogfood_rss_delta_bytes.value() {
+            Some(delta) if *delta > M3_10K_MEMORY_DELTA_BUDGET_BYTES => {
+                blockers.push("memory".to_owned());
+            }
+            Some(_) => {}
+            None => blockers.push("memory_not_measured".to_owned()),
+        }
+
+        match self.latency.pty_batch_p95_ms.value() {
+            Some(p95) if *p95 > M3_BATCH_P95_BUDGET_MS => {
+                blockers.push("latency".to_owned());
+            }
+            Some(_) => {}
+            None => blockers.push("latency_not_measured".to_owned()),
+        }
+
+        blockers
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct M3DogfoodSessionMetrics {
+    pub initial_dimensions: M3DogfoodDimensions,
+    pub final_dimensions: Option<M3DogfoodDimensions>,
+    pub event_counts: M3DogfoodEventCounts,
+    pub logical_output_lines: usize,
+    pub observed_output_bytes: usize,
+    pub recording_output_bytes: usize,
+    pub output_truncated: bool,
+    pub max_output_bytes: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct M3DogfoodMemoryMetrics {
+    pub paneflow_rss_baseline_bytes: M3MetricMeasurement<u64>,
+    pub paneflow_rss_after_bytes: M3MetricMeasurement<u64>,
+    pub dogfood_rss_delta_bytes: M3MetricMeasurement<i64>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct M3DogfoodLatencyMetrics {
+    pub pty_batch_samples: usize,
+    pub pty_batch_status_counts: M3DogfoodBatchStatusCounts,
+    pub pty_batch_p50_ms: M3MetricMeasurement<f64>,
+    pub pty_batch_p95_ms: M3MetricMeasurement<f64>,
+    pub pty_batch_p99_ms: M3MetricMeasurement<f64>,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct M3DogfoodBatchStatusCounts {
+    pub rendered: u64,
+    pub skipped: u64,
+    pub errored: u64,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct M3DogfoodDiffCounters {
+    pub equal: u64,
+    pub mismatch: u64,
+    pub unsupported: u64,
+    pub shadow_disabled: u64,
+    pub side_by_side_skipped: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct M3DogfoodMetricsDecision {
+    pub replacement_blocked: bool,
+    pub blocked_reasons: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub enum M3MetricMeasurement<T> {
+    Measured {
+        value: T,
+    },
+    NotMeasured {
+        os: String,
+        command: String,
+        reason: String,
+    },
+}
+
+impl<T> M3MetricMeasurement<T> {
+    fn value(&self) -> Option<&T> {
+        match self {
+            Self::Measured { value } => Some(value),
+            Self::NotMeasured { .. } => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PtyRecordingReplayReport {
     snapshot: TerminalSnapshot,
@@ -1421,6 +2048,28 @@ fn diff_rows(
             ) {
                 return Some(difference);
             }
+        }
+    }
+
+    None
+}
+
+fn diff_text_lines(field: &str, left: &[String], right: &[String]) -> Option<SnapshotDifference> {
+    if left.len() != right.len() {
+        return Some(SnapshotDifference::new(
+            format!("{field}.len"),
+            left.len(),
+            right.len(),
+        ));
+    }
+
+    for (index, (left, right)) in left.iter().zip(right.iter()).enumerate() {
+        if left != right {
+            return Some(SnapshotDifference::new(
+                format!("{field}[{index}]"),
+                left,
+                right,
+            ));
         }
     }
 
@@ -2590,12 +3239,120 @@ fn read_pty_recording_file_capped(path: &Path) -> Result<String, FixtureLoadErro
     Ok(raw)
 }
 
+fn read_m3_dogfood_recording_file_capped(path: &Path) -> Result<String, FixtureLoadError> {
+    let metadata = fs::metadata(path).map_err(|error| FixtureLoadError::Io {
+        path: path.to_path_buf(),
+        message: error.to_string(),
+    })?;
+    if !metadata.is_file() {
+        return Err(invalid_schema(
+            path,
+            "$",
+            "M3 dogfood recording path must be a regular file",
+        ));
+    }
+    if metadata.len() > M3_MAX_DOGFOOD_RECORDING_FILE_BYTES {
+        return Err(invalid_schema(
+            path,
+            "$",
+            format!(
+                "M3 dogfood recording file is {} bytes, maximum is {M3_MAX_DOGFOOD_RECORDING_FILE_BYTES}",
+                metadata.len()
+            ),
+        ));
+    }
+
+    let file = fs::File::open(path).map_err(|error| FixtureLoadError::Io {
+        path: path.to_path_buf(),
+        message: error.to_string(),
+    })?;
+    let mut reader = file.take(M3_MAX_DOGFOOD_RECORDING_FILE_BYTES + 1);
+    let mut raw = String::new();
+    reader
+        .read_to_string(&mut raw)
+        .map_err(|error| FixtureLoadError::Io {
+            path: path.to_path_buf(),
+            message: error.to_string(),
+        })?;
+
+    if raw.len() as u64 > M3_MAX_DOGFOOD_RECORDING_FILE_BYTES {
+        return Err(invalid_schema(
+            path,
+            "$",
+            format!(
+                "M3 dogfood recording file exceeded maximum of {M3_MAX_DOGFOOD_RECORDING_FILE_BYTES} bytes while reading"
+            ),
+        ));
+    }
+
+    Ok(raw)
+}
+
+fn read_m3_dogfood_metrics_file_capped(path: &Path) -> Result<String, FixtureLoadError> {
+    let metadata = fs::metadata(path).map_err(|error| FixtureLoadError::Io {
+        path: path.to_path_buf(),
+        message: error.to_string(),
+    })?;
+    if !metadata.is_file() {
+        return Err(invalid_schema(
+            path,
+            "$",
+            "M3 dogfood metrics path must be a regular file",
+        ));
+    }
+    if metadata.len() > M3_MAX_DOGFOOD_METRICS_FILE_BYTES {
+        return Err(invalid_schema(
+            path,
+            "$",
+            format!(
+                "M3 dogfood metrics file is {} bytes, maximum is {M3_MAX_DOGFOOD_METRICS_FILE_BYTES}",
+                metadata.len()
+            ),
+        ));
+    }
+
+    let file = fs::File::open(path).map_err(|error| FixtureLoadError::Io {
+        path: path.to_path_buf(),
+        message: error.to_string(),
+    })?;
+    let mut reader = file.take(M3_MAX_DOGFOOD_METRICS_FILE_BYTES + 1);
+    let mut raw = String::new();
+    reader
+        .read_to_string(&mut raw)
+        .map_err(|error| FixtureLoadError::Io {
+            path: path.to_path_buf(),
+            message: error.to_string(),
+        })?;
+
+    if raw.len() as u64 > M3_MAX_DOGFOOD_METRICS_FILE_BYTES {
+        return Err(invalid_schema(
+            path,
+            "$",
+            format!(
+                "M3 dogfood metrics file exceeded maximum of {M3_MAX_DOGFOOD_METRICS_FILE_BYTES} bytes while reading"
+            ),
+        ));
+    }
+
+    Ok(raw)
+}
+
 fn validate_recording_size(
     path: &Path,
     field: impl Into<String>,
     size: PtyRecordingSize,
 ) -> Result<(), FixtureLoadError> {
     Dimensions::new(usize::from(size.columns), usize::from(size.rows))
+        .map(|_| ())
+        .map_err(|error| invalid_schema(path, field, error.to_string()))
+}
+
+fn validate_m3_dimensions(
+    path: &Path,
+    field: impl Into<String>,
+    size: M3DogfoodDimensions,
+) -> Result<(), FixtureLoadError> {
+    Dimensions::new(size.columns, size.rows)
         .map(|_| ())
         .map_err(|error| invalid_schema(path, field, error.to_string()))
 }
@@ -2672,9 +3429,10 @@ mod tests {
     use super::{
         FixtureAssertionFailure, FixtureLoadError, FixturePack, FixtureRunError, FixtureRunner,
         M1_MAX_FIXTURE_INPUT_BYTES, M1_MAX_FIXTURE_VIEWPORT_CELLS, M1_MAX_SNAPSHOT_BYTES,
-        M2_MAX_PTY_RECORDING_FILE_BYTES, PtyRecording, PtyRecordingEvent, PtyRecordingReplayError,
-        SnapshotCodecError, SnapshotCursor, SnapshotScreen, deserialize_snapshot,
-        first_snapshot_difference, serialize_snapshot,
+        M2_MAX_PTY_RECORDING_FILE_BYTES, M3DogfoodMetricsReport, M3DogfoodRecording,
+        M3DogfoodRedactionStatus, M3DogfoodReplayError, M3MetricMeasurement, PtyRecording,
+        PtyRecordingEvent, PtyRecordingReplayError, SnapshotCodecError, SnapshotCursor,
+        SnapshotScreen, deserialize_snapshot, first_snapshot_difference, serialize_snapshot,
     };
     use std::fs;
     use std::path::PathBuf;
@@ -2686,6 +3444,18 @@ mod tests {
     fn pty_recording_path(name: &str) -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("fixtures/pty")
+            .join(name)
+    }
+
+    fn m3_dogfood_recording_path(name: &str) -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("fixtures/m3-dogfood")
+            .join(name)
+    }
+
+    fn m3_dogfood_metrics_path(name: &str) -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("fixtures/m3-dogfood")
             .join(name)
     }
 
@@ -2950,6 +3720,72 @@ mod tests {
                 report.snapshot().columns(),
                 recording.final_snapshot.columns
             );
+        }
+    }
+
+    #[test]
+    fn m3_dogfood_recording_replays_checked_in_synthetic_fixture() {
+        let recording =
+            M3DogfoodRecording::from_path(m3_dogfood_recording_path("synthetic-shadow.json"))
+                .expect("M3 dogfood fixture should load");
+
+        assert_eq!(recording.metadata.source, "paneflow-synthetic");
+        assert_eq!(
+            recording.metadata.redaction_status,
+            M3DogfoodRedactionStatus::Scrubbed
+        );
+        assert_eq!(recording.metadata.event_counts.output, 1);
+        assert_eq!(recording.metadata.event_counts.input, 1);
+        assert_eq!(recording.metadata.event_counts.resize, 1);
+        assert_eq!(recording.metadata.event_counts.lifecycle, 1);
+
+        let report = recording
+            .replay()
+            .expect("M3 dogfood fixture should replay");
+        assert!(!report.snapshot_bytes().is_empty());
+        assert_eq!(report.snapshot().columns(), 6);
+        assert_eq!(report.snapshot().rows(), 2);
+    }
+
+    #[test]
+    fn m3_dogfood_wrong_snapshot_identifies_first_differing_field() {
+        let mut recording =
+            M3DogfoodRecording::from_path(m3_dogfood_recording_path("synthetic-shadow.json"))
+                .expect("M3 dogfood fixture should load");
+        recording.final_snapshot.viewport_lines[1] = "foox  ".to_owned();
+
+        let error = recording
+            .replay()
+            .expect_err("wrong M3 final snapshot should fail");
+
+        assert!(matches!(
+            error,
+            M3DogfoodReplayError::SnapshotMismatch(difference)
+                if difference.field() == "$.viewport_lines[1]"
+        ));
+    }
+
+    #[test]
+    fn m3_dogfood_long_session_metrics_validate_scrubbed_derivatives() {
+        for metrics_name in [
+            "codex-long-session-summary.json",
+            "claude-code-long-session-summary.json",
+        ] {
+            let report = M3DogfoodMetricsReport::from_path(m3_dogfood_metrics_path(metrics_name))
+                .expect("M3 dogfood metrics fixture should load");
+
+            assert_eq!(report.redaction_status, M3DogfoodRedactionStatus::Scrubbed);
+            assert!(report.session.logical_output_lines >= 10_000);
+            assert!(report.decision.replacement_blocked);
+            assert!(!report.decision.blocked_reasons.is_empty());
+            assert!(matches!(
+                report.memory.dogfood_rss_delta_bytes,
+                M3MetricMeasurement::NotMeasured { .. }
+            ));
+            assert!(matches!(
+                report.latency.pty_batch_p95_ms,
+                M3MetricMeasurement::NotMeasured { .. }
+            ));
         }
     }
 

@@ -1,0 +1,74 @@
+{
+  "schema": "hera.m3_dogfood_metrics",
+  "version": 1,
+  "pane_id": "synthetic-codex-cli",
+  "timestamp_ms": 1783123200000,
+  "source": "paneflow-synthetic-codex-cli",
+  "redaction_status": "scrubbed",
+  "session": {
+    "initial_dimensions": { "columns": 80, "rows": 24 },
+    "final_dimensions": { "columns": 80, "rows": 24 },
+    "event_counts": { "output": 100, "input": 1, "resize": 1, "lifecycle": 1 },
+    "logical_output_lines": 10000,
+    "observed_output_bytes": 230000,
+    "recording_output_bytes": 230000,
+    "output_truncated": false,
+    "max_output_bytes": 67108864
+  },
+  "memory": {
+    "paneflow_rss_baseline_bytes": {
+      "status": "not_measured",
+      "os": "windows",
+      "command": "Get-Process -Id <pid> | Select-Object -ExpandProperty WorkingSet64",
+      "reason": "scrubbed synthetic derivative does not include private local process samples"
+    },
+    "paneflow_rss_after_bytes": {
+      "status": "not_measured",
+      "os": "windows",
+      "command": "Get-Process -Id <pid> | Select-Object -ExpandProperty WorkingSet64",
+      "reason": "scrubbed synthetic derivative does not include private local process samples"
+    },
+    "dogfood_rss_delta_bytes": {
+      "status": "not_measured",
+      "os": "windows",
+      "command": "Get-Process -Id <pid> | Select-Object -ExpandProperty WorkingSet64",
+      "reason": "raw local RSS samples are intentionally omitted from checked-in fixtures"
+    }
+  },
+  "latency": {
+    "pty_batch_samples": 0,
+    "pty_batch_status_counts": { "rendered": 0, "skipped": 0, "errored": 0 },
+    "pty_batch_p50_ms": {
+      "status": "not_measured",
+      "os": "windows",
+      "command": "PANEFLOW_LATENCY_PROBE=1 with PANEFLOW_HERA_DOGFOOD=side_by_side",
+      "reason": "checked-in derivative validates schema only"
+    },
+    "pty_batch_p95_ms": {
+      "status": "not_measured",
+      "os": "windows",
+      "command": "PANEFLOW_LATENCY_PROBE=1 with PANEFLOW_HERA_DOGFOOD=side_by_side",
+      "reason": "checked-in derivative validates schema only"
+    },
+    "pty_batch_p99_ms": {
+      "status": "not_measured",
+      "os": "windows",
+      "command": "PANEFLOW_LATENCY_PROBE=1 with PANEFLOW_HERA_DOGFOOD=side_by_side",
+      "reason": "checked-in derivative validates schema only"
+    }
+  },
+  "diff_counters": {
+    "equal": 0,
+    "mismatch": 0,
+    "unsupported": 0,
+    "shadow_disabled": 0,
+    "side_by_side_skipped": 0
+  },
+  "decision": {
+    "replacement_blocked": true,
+    "blocked_reasons": [
+      "RSS delta was not measured in the checked-in derivative",
+      "PTY batch P95 was not measured in the checked-in derivative"
+    ]
+  }
+}

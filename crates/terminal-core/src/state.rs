@@ -1094,6 +1094,8 @@ struct CursorPlacement {
     pending_wrap: bool,
 }
 
+// Keep the modulo form until Hera's MSRV includes `usize::is_multiple_of`.
+#[allow(clippy::manual_is_multiple_of)]
 fn cursor_placement(offset: usize, line_len: usize, columns: usize) -> CursorPlacement {
     if line_len > 0 && offset >= line_len && line_len % columns == 0 {
         return CursorPlacement {

@@ -18,7 +18,7 @@ pub(crate) struct VteAdapter {
 impl VteAdapter {
     pub(crate) fn new() -> Self {
         Self {
-            parser: vte::Parser::<M1_PAYLOAD_LIMIT_BYTES>::new_with_size(),
+            parser: vte::Parser::<M1_PAYLOAD_LIMIT_BYTES>::default(),
             pending_escape: false,
             string_control: None,
             dcs: None,
@@ -87,13 +87,13 @@ impl VteAdapter {
                     return;
                 }
 
-                if !recorder.is_inside_dcs() {
-                    if let Some(target) = string_control_target(bytes[index + 1]) {
-                        self.string_control = Some(StringControlBuilder::new(target));
-                        index += 2;
-                        chunk_start = index;
-                        continue;
-                    }
+                if !recorder.is_inside_dcs()
+                    && let Some(target) = string_control_target(bytes[index + 1])
+                {
+                    self.string_control = Some(StringControlBuilder::new(target));
+                    index += 2;
+                    chunk_start = index;
+                    continue;
                 }
             }
 

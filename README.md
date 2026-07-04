@@ -29,19 +29,20 @@ Paneflow est le premier terrain naturel de dogfood.
 
 ## Forme Initiale Du Produit
 
-Le premier artefact doit etre un workspace Rust, pas une application terminal complete.
+Le premier artefact est un workspace Rust, pas une application terminal complete.
 
-Crates M1 recommandees:
+Crates du coeur initial:
 
 - `terminal-core`: integration parser VT, modele d'ecran, scrollback, curseur, modes, resize, snapshots.
 - `terminal-protocol`: events structures, blocs de commande, marqueurs de prompt, hyperlinks, metadata image, format de replay.
 - `terminal-render-model`: modele cell/line/damage neutre pour GPUI ou d'autres frontends.
 - `terminal-fixtures`: tests de compatibilite, golden snapshots, replays issus de vraies sessions CLI.
 - `terminal-cli`: petit outil debug pour injecter des bytes, inspecter l'etat, rejouer des sessions et benchmarker.
+- `terminal-pty`: frontiere runtime M2 pour executer de vrais processus via PTY sans polluer `terminal-core`.
 
-`terminal-pty` est la frontiere M2: abstraction POSIX PTY et Windows ConPTY apres validation du coeur headless.
-
-L'engine doit etre utilisable en headless avant l'existence du moindre renderer ou runtime PTY.
+Le coeur reste utilisable en headless sans renderer. `terminal-pty` est une
+couche runtime separee: process IO, resize, lifecycle et details plateforme
+restent hors de `terminal-core`.
 
 ## Non-Objectifs Pour La Premiere Version
 
@@ -220,7 +221,7 @@ Construire un workspace Rust headless capable de:
 
 Output: workspace Rust M1 avec `terminal-core`, `terminal-protocol`, `terminal-render-model`, `terminal-fixtures` et `terminal-cli`, sans crate PTY.
 
-### M2: Harness PTY Reel
+### M2: Harness PTY Reel (DONE)
 
 Executer de vraies commandes via PTY:
 
@@ -234,7 +235,9 @@ Executer de vraies commandes via PTY:
 - EOF et exit handling
 - backpressure safety
 
-Output: `terminal-cli run <command>` execute via PTY et dump le snapshot final.
+Output livre: `terminal-cli run <command>` execute via PTY, dump le snapshot
+final, peut enregistrer un recording PTY et dispose de replays offline
+deterministes via `terminal-fixtures`.
 
 ### M3: Dogfood Paneflow
 
@@ -246,7 +249,14 @@ Ajouter une integration Paneflow derriere feature flag:
 - comparer le comportement au chemin actuel base sur Alacritty
 - capturer de longues sessions Codex CLI et Claude Code
 
-Output: branche Paneflow avec validation side-by-side.
+Output cible: branche Paneflow avec validation side-by-side, longues sessions
+Codex/Claude capturees, mesures memoire et liste des ecarts avant toute surface
+terminal productisee.
+
+Gate de decision: `docs/m3-paneflow-dogfood-report.md`. Tant que les vraies
+captures locales Codex/Claude, les mesures RSS/latence et les mismatches P0 ne
+sont pas expliques, la recommandation reste de continuer le dogfood au lieu de
+remplacer le chemin terminal Paneflow.
 
 ### M4: Public Proof
 
@@ -284,6 +294,7 @@ Avant publication publique, verifier au minimum:
 
 ## Intention Du Dossier
 
-Ce dossier commence comme brief projet et hub de recherche. Il est maintenant le workspace Rust Hera, avec la frontiere M2 `terminal-pty` ouverte.
-
-La prochaine etape utile est de connecter `terminal-cli run <command>` au harness PTY reel: mode direct en argv sans shell implicite, mode shell seulement via option explicite, `terminal-core` toujours sans dependance PTY ou plateforme.
+Ce dossier commence comme brief projet et hub de recherche. Il est maintenant
+le workspace Rust Hera, avec M2 `terminal-pty` livre. La suite naturelle est
+M3: dogfood Paneflow side-by-side, mesure et capture de longues sessions avant
+renderer ou app terminal complete.
