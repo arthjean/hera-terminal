@@ -399,10 +399,18 @@ impl TerminalState {
 
     fn apply_plain_csi(&mut self, sequence: &CsiSequence) -> Vec<TerminalAction> {
         match sequence.action() {
+            'A' => self.move_cursor_up(sequence),
+            'B' => self.move_cursor_down(sequence),
+            'C' | 'a' => self.move_cursor_forward(sequence),
+            'D' => self.move_cursor_back(sequence),
+            'E' => self.cursor_next_line(sequence),
+            'F' => self.cursor_previous_line(sequence),
+            'G' | '`' => self.position_cursor_column(sequence),
             'H' | 'f' => self.position_cursor(sequence),
             'J' => return self.erase_in_display(sequence),
             'K' => return self.erase_in_line(sequence),
             'X' => self.erase_characters(sequence),
+            'd' => self.position_cursor_row(sequence),
             'm' => self.apply_sgr(sequence),
             _ => {}
         }
@@ -420,6 +428,9 @@ impl TerminalState {
             };
 
             match mode {
+                25 => {
+                    self.set_cursor_visible(enabled);
+                }
                 47 => {
                     if enabled {
                         self.enter_alternate_screen(false);
@@ -463,8 +474,94 @@ impl TerminalState {
         let row = one_based_to_index(row, self.config.dimensions.rows());
         let column = one_based_to_index(column, self.config.dimensions.columns());
 
+        self.set_cursor_position(row, column);
+    }
+
+    fn move_cursor_up(&mut self, sequence: &CsiSequence) {
+        let count = usize::from(csi_param_or_default(sequence, 0, 1));
+        let row = self.active_screen_ref().cursor.row().saturating_sub(count);
+        let column = self.active_screen_ref().cursor.column();
+        self.set_cursor_position(row, column);
+    }
+
+    fn move_cursor_down(&mut self, sequence: &CsiSequence) {
+        let count = usize::from(csi_param_or_default(sequence, 0, 1));
+        let row = self
+            .active_screen_ref()
+            .cursor
+            .row()
+            .saturating_add(count)
+            .min(self.config.dimensions.rows() - 1);
+        let column = self.active_screen_ref().cursor.column();
+        self.set_cursor_position(row, column);
+    }
+
+    fn move_cursor_forward(&mut self, sequence: &CsiSequence) {
+        let count = usize::from(csi_param_or_default(sequence, 0, 1));
+        let row = self.active_screen_ref().cursor.row();
+        let column = self
+            .active_screen_ref()
+            .cursor
+            .column()
+            .saturating_add(count)
+            .min(self.config.dimensions.columns() - 1);
+        self.set_cursor_position(row, column);
+    }
+
+    fn move_cursor_back(&mut self, sequence: &CsiSequence) {
+        let count = usize::from(csi_param_or_default(sequence, 0, 1));
+        let row = self.active_screen_ref().cursor.row();
+        let column = self
+            .active_screen_ref()
+            .cursor
+            .column()
+            .saturating_sub(count);
+        self.set_cursor_position(row, column);
+    }
+
+    fn cursor_next_line(&mut self, sequence: &CsiSequence) {
+        let count = usize::from(csi_param_or_default(sequence, 0, 1));
+        let row = self
+            .active_screen_ref()
+            .cursor
+            .row()
+            .saturating_add(count)
+            .min(self.config.dimensions.rows() - 1);
+        self.set_cursor_position(row, 0);
+    }
+
+    fn cursor_previous_line(&mut self, sequence: &CsiSequence) {
+        let count = usize::from(csi_param_or_default(sequence, 0, 1));
+        let row = self.active_screen_ref().cursor.row().saturating_sub(count);
+        self.set_cursor_position(row, 0);
+    }
+
+    fn position_cursor_column(&mut self, sequence: &CsiSequence) {
+        let column = csi_param_or_default(sequence, 0, 1);
+        let row = self.active_screen_ref().cursor.row();
+        let column = one_based_to_index(column, self.config.dimensions.columns());
+        self.set_cursor_position(row, column);
+    }
+
+    fn position_cursor_row(&mut self, sequence: &CsiSequence) {
+        let row = csi_param_or_default(sequence, 0, 1);
+        let row = one_based_to_index(row, self.config.dimensions.rows());
+        let column = self.active_screen_ref().cursor.column();
+        self.set_cursor_position(row, column);
+    }
+
+    fn set_cursor_position(&mut self, row: usize, column: usize) {
+        let previous_row = self.active_screen_ref().cursor.row();
+
         self.active_screen_mut().pending_wrap = false;
         self.active_screen_mut().set_cursor(row, column);
+        self.damage.mark(previous_row);
+        self.damage.mark(row);
+    }
+
+    fn set_cursor_visible(&mut self, visible: bool) {
+        let row = self.active_screen_ref().cursor.row();
+        self.active_screen_mut().set_cursor_visible(visible);
         self.damage.mark(row);
     }
 
@@ -587,6 +684,33 @@ impl TerminalState {
                 27 => {
                     inverse = false;
                     index += 1;
+                }
+                30..=37 => {
+                    foreground = Some(Color::Indexed(sgr_basic_color_index(params[index], 30)));
+                    index += 1;
+                }
+                40..=47 => {
+                    background = Some(Color::Indexed(sgr_basic_color_index(params[index], 40)));
+                    index += 1;
+                }
+                90..=97 => {
+                    foreground = Some(Color::Indexed(sgr_basic_color_index(params[index], 90) + 8));
+                    index += 1;
+                }
+                100..=107 => {
+                    background = Some(Color::Indexed(
+                        sgr_basic_color_index(params[index], 100) + 8,
+                    ));
+                    index += 1;
+                }
+                38 | 48 if params.get(index + 1) == Some(&5) && index + 2 < params.len() => {
+                    let color = Color::Indexed(sgr_u8(params[index + 2]));
+                    if params[index] == 38 {
+                        foreground = Some(color);
+                    } else {
+                        background = Some(color);
+                    }
+                    index += 3;
                 }
                 38 | 48 if params.get(index + 1) == Some(&2) && index + 4 < params.len() => {
                     let color = Color::Rgb {
@@ -969,6 +1093,10 @@ impl Screen {
         self.cursor = CursorState::new(row, column, self.cursor.visible());
     }
 
+    fn set_cursor_visible(&mut self, visible: bool) {
+        self.cursor = CursorState::new(self.cursor.row(), self.cursor.column(), visible);
+    }
+
     fn scroll_up(&mut self, new_bottom_row: Row) -> Row {
         let removed = match self.rows.pop_front() {
             Some(row) => row,
@@ -1151,6 +1279,11 @@ fn printable_width(ch: char) -> u8 {
 
 fn sgr_u8(value: u16) -> u8 {
     value.min(u16::from(u8::MAX)) as u8
+}
+
+fn sgr_basic_color_index(value: u16, base: u16) -> u8 {
+    debug_assert!((base..=base + 7).contains(&value));
+    (value - base) as u8
 }
 
 fn csi_param_or_default(sequence: &CsiSequence, index: usize, default: u16) -> u16 {

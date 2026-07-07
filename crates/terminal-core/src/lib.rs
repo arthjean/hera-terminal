@@ -440,6 +440,51 @@ mod tests {
     }
 
     #[test]
+    fn sgr_basic_and_bright_colors_use_indexed_palette_slots() {
+        let mut terminal = terminal(4, 1);
+
+        terminal.advance_bytes(b"\x1b[34mB\x1b[91mR\x1b[42mG\x1b[104mH");
+        let snapshot = terminal.render_snapshot();
+        let row = &snapshot.viewport_rows()[0];
+
+        assert_eq!(row.cells()[0].style().foreground(), Some(Color::Indexed(4)));
+        assert_eq!(row.cells()[1].style().foreground(), Some(Color::Indexed(9)));
+        assert_eq!(row.cells()[2].style().background(), Some(Color::Indexed(2)));
+        assert_eq!(
+            row.cells()[3].style().background(),
+            Some(Color::Indexed(12))
+        );
+    }
+
+    #[test]
+    fn sgr_256_color_and_partial_resets_mutate_printed_cell_style() {
+        let mut terminal = terminal(4, 1);
+
+        terminal.advance_bytes(b"\x1b[38;5;196mF\x1b[48:5:22mB\x1b[39mR\x1b[49mD");
+        let snapshot = terminal.render_snapshot();
+        let row = &snapshot.viewport_rows()[0];
+
+        assert_eq!(
+            row.cells()[0].style().foreground(),
+            Some(Color::Indexed(196))
+        );
+        assert_eq!(
+            row.cells()[1].style().foreground(),
+            Some(Color::Indexed(196))
+        );
+        assert_eq!(
+            row.cells()[1].style().background(),
+            Some(Color::Indexed(22))
+        );
+        assert_eq!(row.cells()[2].style().foreground(), None);
+        assert_eq!(
+            row.cells()[2].style().background(),
+            Some(Color::Indexed(22))
+        );
+        assert_eq!(row.cells()[3].style(), CellStyle::default());
+    }
+
+    #[test]
     fn cup_and_hvp_position_printable_cells_with_one_based_coordinates() {
         let mut terminal = terminal(5, 3);
 
@@ -464,6 +509,35 @@ mod tests {
         assert_eq!(viewport_text(&snapshot.viewport_rows()[1]), "   W");
         assert_eq!(snapshot.cursor().row(), 1);
         assert_eq!(snapshot.cursor().column(), 3);
+    }
+
+    #[test]
+    fn csi_relative_and_axis_positioning_moves_printable_cells() {
+        let mut terminal = terminal(12, 4);
+
+        terminal.advance_bytes(b"L\x1b[5CR\x1b[2GQ\x1b[2ER\x1b[4CX\x1b[1FY\x1b[9`Z\x1b[3dV");
+        let snapshot = terminal.render_snapshot();
+
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "LQ    R     ");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[1]), "Y       Z   ");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[2]), "R    X   V  ");
+        assert_eq!(snapshot.cursor().row(), 2);
+        assert_eq!(snapshot.cursor().column(), 10);
+    }
+
+    #[test]
+    fn dec_private_cursor_visibility_mode_updates_snapshot_cursor() {
+        let mut terminal = terminal(4, 2);
+
+        terminal.advance_bytes(b"\x1b[?25lH");
+        let hidden = terminal.render_snapshot();
+        assert!(!hidden.cursor().visible());
+
+        terminal.advance_bytes(b"\x1b[?25h");
+        let visible = terminal.render_snapshot();
+        assert!(visible.cursor().visible());
+        assert_eq!(visible.cursor().row(), 0);
+        assert_eq!(visible.cursor().column(), 1);
     }
 
     #[test]
