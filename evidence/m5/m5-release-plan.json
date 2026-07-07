@@ -1,0 +1,80 @@
+{
+  "schema": "hera.m5_release_plan",
+  "version": 1,
+  "generated_at": "2026-07-04T15:41:36Z",
+  "source_command": "terminal-cli generate-m5-package-readiness --output evidence/m5/m5-package-readiness.json --release-plan-output evidence/m5/m5-release-plan.json",
+  "publish_out_of_scope": true,
+  "publish_order": [
+    "terminal-protocol",
+    "terminal-render-model",
+    "terminal-core",
+    "terminal-fixtures",
+    "terminal-pty",
+    "terminal-cli"
+  ],
+  "crates": [
+    {
+      "name": "terminal-protocol",
+      "publish_intent": "intended_public",
+      "publish_config": "publish = true",
+      "release_step": 1,
+      "depends_on": [],
+      "rationale": "Leaf protocol crate that other public crates depend on."
+    },
+    {
+      "name": "terminal-render-model",
+      "publish_intent": "intended_public",
+      "publish_config": "publish = true",
+      "release_step": 2,
+      "depends_on": [],
+      "rationale": "Leaf render contract used by terminal-core embedders."
+    },
+    {
+      "name": "terminal-core",
+      "publish_intent": "intended_public",
+      "publish_config": "publish = true",
+      "release_step": 3,
+      "depends_on": [
+        "terminal-protocol",
+        "terminal-render-model"
+      ],
+      "rationale": "Core engine depends on protocol and render-model surfaces."
+    },
+    {
+      "name": "terminal-fixtures",
+      "publish_intent": "intended_public",
+      "publish_config": "publish = true",
+      "release_step": 4,
+      "depends_on": [
+        "terminal-core"
+      ],
+      "rationale": "Fixture harness depends on terminal-core behavior."
+    },
+    {
+      "name": "terminal-pty",
+      "publish_intent": "intended_public",
+      "publish_config": "publish = true",
+      "release_step": 5,
+      "depends_on": [
+        "terminal-core"
+      ],
+      "rationale": "Runtime crate packages after terminal-core because its package dry-run includes that dev dependency."
+    },
+    {
+      "name": "terminal-cli",
+      "publish_intent": "intended_public",
+      "publish_config": "publish = true",
+      "release_step": 6,
+      "depends_on": [
+        "terminal-core",
+        "terminal-fixtures",
+        "terminal-pty"
+      ],
+      "rationale": "CLI packages last because it depends on core, fixtures and PTY runtime crates."
+    }
+  ],
+  "notes": [
+    "Publish order is derived from Hera workspace dependencies and keeps dependencies before dependents.",
+    "cargo publish is not run by M5 and remains a future maintainer action."
+  ]
+}

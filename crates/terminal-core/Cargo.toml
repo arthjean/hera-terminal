@@ -3,12 +3,28 @@ name = "terminal-core"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-publish.workspace = true
+description = "Headless terminal state engine for Hera."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/arthjean/hera-terminal"
+documentation = "https://docs.rs/terminal-core"
+readme = "README.md"
+keywords = ["terminal", "vt", "replay", "hera"]
+categories = ["command-line-utilities", "development-tools"]
+publish = true
 
 [dependencies]
 terminal-render-model.workspace = true
 terminal-protocol.workspace = true
 vte.workspace = true
+
+[package.metadata.docs.rs]
+all-features = true
+default-target = "x86_64-unknown-linux-gnu"
+targets = [
+    "x86_64-pc-windows-msvc",
+    "aarch64-apple-darwin",
+    "aarch64-unknown-linux-gnu",
+]
 
 [lints]
 workspace = true

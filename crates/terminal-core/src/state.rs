@@ -210,6 +210,7 @@ pub(crate) struct TerminalState {
     next_row_id: u64,
     damage: DamageTracker,
     style: CellStyle,
+    saved_cursor: Option<SavedCursor>,
 }
 
 impl TerminalState {
@@ -227,6 +228,7 @@ impl TerminalState {
             next_row_id,
             damage: DamageTracker::dirty_all(config.dimensions.rows()),
             style: CellStyle::default(),
+            saved_cursor: None,
         }
     }
 
@@ -384,17 +386,33 @@ impl TerminalState {
             ))];
         }
 
-        if sequence.intermediates().is_empty() && sequence.action() == 'm' {
-            self.apply_sgr(sequence);
-            return Vec::new();
+        if sequence.intermediates().is_empty() {
+            return self.apply_plain_csi(sequence);
         }
 
-        if sequence.intermediates() != b"?" || !matches!(sequence.action(), 'h' | 'l') {
-            return Vec::new();
+        if sequence.intermediates() == b"?" && matches!(sequence.action(), 'h' | 'l') {
+            return self.apply_dec_private_mode(sequence);
         }
 
+        Vec::new()
+    }
+
+    fn apply_plain_csi(&mut self, sequence: &CsiSequence) -> Vec<TerminalAction> {
+        match sequence.action() {
+            'H' | 'f' => self.position_cursor(sequence),
+            'J' => return self.erase_in_display(sequence),
+            'K' => return self.erase_in_line(sequence),
+            'X' => self.erase_characters(sequence),
+            'm' => self.apply_sgr(sequence),
+            _ => {}
+        }
+
+        Vec::new()
+    }
+
+    fn apply_dec_private_mode(&mut self, sequence: &CsiSequence) -> Vec<TerminalAction> {
         let enabled = sequence.action() == 'h';
-        let mut generated = Vec::new();
+        let generated = Vec::new();
 
         for param in sequence.params() {
             let Some(mode) = param.subparameters().first().copied() else {
@@ -402,21 +420,99 @@ impl TerminalState {
             };
 
             match mode {
-                1049 => self.set_alternate_screen(enabled),
-                47 | 1047 | 1048 => {
-                    generated.push(TerminalAction::Unsupported(UnsupportedSequence::new(
-                        UnsupportedSequenceKind::Other,
-                        format!(
-                            "unsupported alternate-screen private mode {mode}{}",
-                            sequence.action()
-                        ),
-                    )));
+                47 => {
+                    if enabled {
+                        self.enter_alternate_screen(false);
+                    } else {
+                        self.exit_alternate_screen(false);
+                    }
+                }
+                1047 => {
+                    if enabled {
+                        self.enter_alternate_screen(false);
+                    } else {
+                        self.exit_alternate_screen(true);
+                    }
+                }
+                1048 => {
+                    if enabled {
+                        self.save_cursor();
+                    } else {
+                        self.restore_cursor();
+                    }
+                }
+                1049 => {
+                    if enabled {
+                        self.save_cursor();
+                        self.enter_alternate_screen(true);
+                    } else {
+                        self.exit_alternate_screen(true);
+                        self.restore_cursor();
+                    }
                 }
                 _ => {}
             }
         }
 
         generated
+    }
+
+    fn position_cursor(&mut self, sequence: &CsiSequence) {
+        let row = csi_param_or_default(sequence, 0, 1);
+        let column = csi_param_or_default(sequence, 1, 1);
+        let row = one_based_to_index(row, self.config.dimensions.rows());
+        let column = one_based_to_index(column, self.config.dimensions.columns());
+
+        self.active_screen_mut().pending_wrap = false;
+        self.active_screen_mut().set_cursor(row, column);
+        self.damage.mark(row);
+    }
+
+    fn erase_in_display(&mut self, sequence: &CsiSequence) -> Vec<TerminalAction> {
+        let mode = csi_param_or_default(sequence, 0, 0);
+        match mode {
+            0 => self.erase_display_from_cursor(),
+            1 => self.erase_display_to_cursor(),
+            2 => self.erase_display_all(),
+            _ => {
+                return vec![TerminalAction::Unsupported(UnsupportedSequence::new(
+                    UnsupportedSequenceKind::Other,
+                    format!("unsupported ED mode {mode}"),
+                ))];
+            }
+        }
+
+        Vec::new()
+    }
+
+    fn erase_in_line(&mut self, sequence: &CsiSequence) -> Vec<TerminalAction> {
+        let mode = csi_param_or_default(sequence, 0, 0);
+        match mode {
+            0 => self.erase_line_from_cursor(),
+            1 => self.erase_line_to_cursor(),
+            2 => self.erase_line_all(),
+            _ => {
+                return vec![TerminalAction::Unsupported(UnsupportedSequence::new(
+                    UnsupportedSequenceKind::Other,
+                    format!("unsupported EL mode {mode}"),
+                ))];
+            }
+        }
+
+        Vec::new()
+    }
+
+    fn erase_characters(&mut self, sequence: &CsiSequence) {
+        let count = csi_param_or_default(sequence, 0, 1);
+        let count = usize::from(if count == 0 { 1 } else { count });
+        let row = self.active_screen_ref().cursor.row();
+        let column = self.active_screen_ref().cursor.column();
+        let end = column
+            .saturating_add(count)
+            .min(self.config.dimensions.columns());
+
+        self.clear_cells(row, column, end);
+        self.active_screen_mut().pending_wrap = false;
     }
 
     fn backspace(&mut self) {
@@ -602,16 +698,129 @@ impl TerminalState {
         self.damage.mark_all(self.config.dimensions.rows());
     }
 
-    fn set_alternate_screen(&mut self, enabled: bool) {
-        if enabled {
+    fn enter_alternate_screen(&mut self, clear: bool) {
+        if clear {
             self.alternate
                 .reset(self.config.dimensions, &mut self.next_row_id);
-            self.active_screen = ScreenIdentity::Alternate;
-        } else {
-            self.active_screen = ScreenIdentity::Primary;
         }
 
+        self.active_screen = ScreenIdentity::Alternate;
         self.damage.mark_all(self.config.dimensions.rows());
+    }
+
+    fn exit_alternate_screen(&mut self, clear_alternate: bool) {
+        if clear_alternate && self.active_screen == ScreenIdentity::Alternate {
+            self.alternate
+                .reset(self.config.dimensions, &mut self.next_row_id);
+        }
+
+        self.active_screen = ScreenIdentity::Primary;
+        self.damage.mark_all(self.config.dimensions.rows());
+    }
+
+    fn save_cursor(&mut self) {
+        self.saved_cursor = Some(SavedCursor {
+            screen: self.active_screen,
+            cursor: self.active_screen_ref().cursor,
+        });
+    }
+
+    fn restore_cursor(&mut self) {
+        let Some(saved) = self.saved_cursor else {
+            return;
+        };
+        if saved.screen != self.active_screen {
+            return;
+        }
+
+        let row = saved
+            .cursor
+            .row()
+            .min(self.config.dimensions.rows().saturating_sub(1));
+        let column = saved
+            .cursor
+            .column()
+            .min(self.config.dimensions.columns().saturating_sub(1));
+        self.active_screen_mut().pending_wrap = false;
+        self.active_screen_mut().set_cursor(row, column);
+        self.damage.mark(row);
+    }
+
+    fn erase_display_from_cursor(&mut self) {
+        let row = self.active_screen_ref().cursor.row();
+        let column = self.active_screen_ref().cursor.column();
+        let rows = self.config.dimensions.rows();
+        let columns = self.config.dimensions.columns();
+
+        self.clear_cells(row, column, columns);
+        for target_row in row + 1..rows {
+            self.clear_cells(target_row, 0, columns);
+        }
+        self.active_screen_mut().pending_wrap = false;
+    }
+
+    fn erase_display_to_cursor(&mut self) {
+        let row = self.active_screen_ref().cursor.row();
+        let column = self.active_screen_ref().cursor.column();
+        let columns = self.config.dimensions.columns();
+
+        for target_row in 0..row {
+            self.clear_cells(target_row, 0, columns);
+        }
+        self.clear_cells(row, 0, column.saturating_add(1).min(columns));
+        self.active_screen_mut().pending_wrap = false;
+    }
+
+    fn erase_display_all(&mut self) {
+        let rows = self.config.dimensions.rows();
+        let columns = self.config.dimensions.columns();
+
+        for row in 0..rows {
+            self.clear_cells(row, 0, columns);
+        }
+        self.active_screen_mut().pending_wrap = false;
+    }
+
+    fn erase_line_from_cursor(&mut self) {
+        let row = self.active_screen_ref().cursor.row();
+        let column = self.active_screen_ref().cursor.column();
+        self.clear_cells(row, column, self.config.dimensions.columns());
+        self.active_screen_mut().pending_wrap = false;
+    }
+
+    fn erase_line_to_cursor(&mut self) {
+        let row = self.active_screen_ref().cursor.row();
+        let column = self.active_screen_ref().cursor.column();
+        self.clear_cells(
+            row,
+            0,
+            column
+                .saturating_add(1)
+                .min(self.config.dimensions.columns()),
+        );
+        self.active_screen_mut().pending_wrap = false;
+    }
+
+    fn erase_line_all(&mut self) {
+        let row = self.active_screen_ref().cursor.row();
+        self.clear_cells(row, 0, self.config.dimensions.columns());
+        self.active_screen_mut().pending_wrap = false;
+    }
+
+    fn clear_cells(&mut self, row: usize, start_column: usize, end_column: usize) {
+        let columns = self.config.dimensions.columns();
+        if row >= self.config.dimensions.rows()
+            || start_column >= columns
+            || start_column >= end_column
+        {
+            return;
+        }
+        let end_column = end_column.min(columns);
+        let screen = self.active_screen_mut();
+        for cell in &mut screen.rows[row].cells[start_column..end_column] {
+            *cell = RenderCell::empty();
+        }
+        self.damage.mark(row);
     }
 
     fn resize_active_primary(&mut self, dimensions: Dimensions) {
@@ -697,6 +906,12 @@ struct Screen {
     rows: VecDeque<Row>,
     cursor: CursorState,
     pending_wrap: bool,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct SavedCursor {
+    screen: ScreenIdentity,
+    cursor: CursorState,
 }
 
 impl Screen {
@@ -936,6 +1151,18 @@ fn printable_width(ch: char) -> u8 {
 
 fn sgr_u8(value: u16) -> u8 {
     value.min(u16::from(u8::MAX)) as u8
+}
+
+fn csi_param_or_default(sequence: &CsiSequence, index: usize, default: u16) -> u16 {
+    sequence
+        .params()
+        .get(index)
+        .and_then(|param| param.subparameters().first().copied())
+        .map_or(default, |value| if value == 0 { default } else { value })
+}
+
+fn one_based_to_index(value: u16, extent: usize) -> usize {
+    usize::from(value).saturating_sub(1).min(extent - 1)
 }
 
 struct ReflowResult {

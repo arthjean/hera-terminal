@@ -1,0 +1,621 @@
+{
+  "schema": "hera.m5_compatibility_matrix",
+  "version": 1,
+  "generated_at": "2026-07-04T14:15:00Z",
+  "rows": [
+    {
+      "behavior_id": "vt.cursor.c0_controls",
+      "category": "cursor_movement",
+      "behavior": "Backspace, carriage return, line feed and horizontal tab move the cursor according to Hera policy.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "vttest",
+        "label": "VTTEST cursor and control behavior",
+        "url": "https://invisible-island.net/vttest/"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "controls-cr-lf-bs-tab"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": []
+    },
+    {
+      "behavior_id": "vt.cursor.csi_positioning",
+      "category": "cursor_movement",
+      "behavior": "CSI CUP and HVP place printable cells using one-based row and column coordinates.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences CUP and HVP",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "csi-cup-hvp-positioning"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": ["This row closes the M4 vt.cursor.csi_positioning blocker."]
+    },
+    {
+      "behavior_id": "vt.cursor.csi_positioning_defaults_and_bounds",
+      "category": "cursor_movement",
+      "behavior": "Missing and zero CUP/HVP parameters default to one, and out-of-range coordinates clamp to the viewport.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences cursor defaults",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "csi-positioning-defaults-and-bounds"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": ["Malformed negative CSI is rejected by the parser boundary without panicking or moving the cursor."]
+    },
+    {
+      "behavior_id": "vt.screen.ed",
+      "category": "screen_clearing",
+      "behavior": "Erase in Display modes 0, 1 and 2 clear the expected active viewport cells without touching scrollback.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences ED",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "ed-mode-0"
+          },
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "ed-mode-1"
+          },
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "ed-mode-2"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": []
+    },
+    {
+      "behavior_id": "vt.screen.el",
+      "category": "screen_clearing",
+      "behavior": "Erase in Line modes 0, 1 and 2 clear the expected cells on the active row and preserve cursor position.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences EL",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "el-mode-0"
+          },
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "el-mode-1"
+          },
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "el-mode-2"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": []
+    },
+    {
+      "behavior_id": "vt.screen.ech",
+      "category": "screen_clearing",
+      "behavior": "Erase Character clears the requested cells from the cursor without shifting following content.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences ECH",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "ech-clears-without-shift"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": []
+    },
+    {
+      "behavior_id": "vt.screen.ed_el_ech",
+      "category": "screen_clearing",
+      "behavior": "ED, EL and ECH are fixture-backed as an M5 screen-erasure compatibility group.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences ED, EL and ECH",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "ed-mode-0"
+          },
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "el-mode-0"
+          },
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "ech-clears-without-shift"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": ["This row closes the M4 vt.screen.erase_display_line blocker."]
+    },
+    {
+      "behavior_id": "vt.screen.erasure_unsupported_params",
+      "category": "screen_clearing",
+      "behavior": "Unsupported erasure parameters emit an unsupported action and preserve terminal state.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences erasure parameters",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "unsupported-erasure-parameter-preserves-state"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": []
+    },
+    {
+      "behavior_id": "vt.scrolling.primary_scrollback",
+      "category": "scrolling",
+      "behavior": "Primary screen output scrolls into bounded scrollback and trims to configured limits.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "vttest",
+        "label": "VTTEST scrolling categories",
+        "url": "https://invisible-island.net/vttest/"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "scrollback-trim"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": []
+    },
+    {
+      "behavior_id": "vt.sgr.character_attributes",
+      "category": "character_attributes",
+      "behavior": "SGR reset and 24-bit foreground color mutate rendered cell styles.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences SGR",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "sgr-reset"
+          },
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "sgr-truecolor"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": ["Fixture-backed subset covers reset and truecolor, not the full SGR surface."]
+    },
+    {
+      "behavior_id": "vt.screen.alternate_1049",
+      "category": "alternate_screen",
+      "behavior": "DEC private mode 1049 saves cursor, enters a cleared alternate screen, returns to primary and restores cursor.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences alternate screen 1049",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "alternate-screen-1049"
+          },
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "dec-private-1049-restores-primary-cursor"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": []
+    },
+    {
+      "behavior_id": "xterm.private_modes.47",
+      "category": "alternate_screen",
+      "behavior": "DEC private mode 47 switches between primary and alternate screens without primary scrollback pollution.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences private mode 47",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "dec-private-47-switches-screen"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": []
+    },
+    {
+      "behavior_id": "xterm.private_modes.1047",
+      "category": "alternate_screen",
+      "behavior": "DEC private mode 1047 switches screens and clears alternate screen state on reset.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences private mode 1047",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "dec-private-1047-clears-alternate-on-reset"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": []
+    },
+    {
+      "behavior_id": "xterm.private_modes.1048",
+      "category": "alternate_screen",
+      "behavior": "DEC private mode 1048 saves and restores cursor position on the active screen.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences private mode 1048",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "dec-private-1048-save-restore-cursor"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": []
+    },
+    {
+      "behavior_id": "xterm.private_modes.47_1047_1048",
+      "category": "alternate_screen",
+      "behavior": "DEC private modes 47, 1047 and 1048 are resolved by fixture-backed policy rows.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences private modes 47, 1047 and 1048",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "dec-private-47-switches-screen"
+          },
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "dec-private-1047-clears-alternate-on-reset"
+          },
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m5-compatibility.json",
+            "name": "dec-private-1048-save-restore-cursor"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": ["This row closes the M4 xterm.private_modes.1047_1048 blocker."]
+    },
+    {
+      "behavior_id": "vt.resize.primary_reflow",
+      "category": "resize_reflow",
+      "behavior": "Primary wrapped rows reflow predictably when the viewport narrows and widens.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "vttest",
+        "label": "VTTEST resize and wrapping references",
+        "url": "https://invisible-island.net/vttest/"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "resize-primary-wrap-narrow-wide"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": []
+    },
+    {
+      "behavior_id": "vt.resize.alternate_preserves_primary",
+      "category": "resize_reflow",
+      "behavior": "Resizing while alternate screen is active does not pollute primary scrollback.",
+      "priority": "p0",
+      "source_reference": {
+        "kind": "vttest",
+        "label": "VTTEST alternate screen and resize references",
+        "url": "https://invisible-island.net/vttest/"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "resize-alternate-keeps-primary-scrollback"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-core",
+      "notes": []
+    },
+    {
+      "behavior_id": "xterm.mode.bracketed_paste",
+      "category": "xterm_escape_handling",
+      "behavior": "Bracketed paste mode 2004 toggles the render snapshot mode field.",
+      "priority": "p1",
+      "source_reference": {
+        "kind": "xterm_control_sequences",
+        "label": "Xterm Control Sequences bracketed paste mode",
+        "url": "https://www.xfree86.org/current/ctlseqs.html"
+      },
+      "fixture_coverage": {
+        "status": "fixture_backed",
+        "artifacts": [
+          {
+            "kind": "fixture",
+            "path": "crates/terminal-fixtures/fixtures/m1-golden.json",
+            "name": "bracketed-paste-mode"
+          }
+        ]
+      },
+      "platform_measurements": {
+        "windows": "pass",
+        "linux": "not_measured",
+        "macos": "not_measured",
+        "notes": ["Fixture validation was run locally on Windows during M5 EP-002."]
+      },
+      "m5_disposition": "pass",
+      "owner": "terminal-fixtures",
+      "notes": []
+    },
+    {
+      "behavior_id": "xterm.dcs.sixel_images",
+      "category": "xterm_escape_handling",
+      "behavior": "DCS Sixel image payloads are parsed only as safe payload metadata until image rendering is scoped.",
+      "priority": "p2",
+      "source_reference": {
+        "kind": "esctest2",
+        "label": "esctest2 xterm-style terminal tests",
+        "url": "https://github.com/ThomasDickey/esctest2"
+      },
+      "fixture_coverage": {
+        "status": "out_of_scope",
+        "artifacts": []
+      },
+      "platform_measurements": {
+        "windows": "not_applicable",
+        "linux": "not_applicable",
+        "macos": "not_applicable",
+        "notes": []
+      },
+      "m5_disposition": "out_of_scope",
+      "owner": "terminal-protocol",
+      "notes": ["Image protocols remain explicitly outside M5 core VT hardening claims."]
+    }
+  ]
+}

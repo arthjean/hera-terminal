@@ -1,0 +1,214 @@
+{
+  "schema": "hera.m5_baseline",
+  "version": 1,
+  "generated_at": "2026-07-04T15:57:27Z",
+  "m5_status": "READY",
+  "source_milestone": {
+    "id": "M4",
+    "status_path": "tasks/prd-m4-public-proof-status.json",
+    "prd_status": "DONE",
+    "done_status_referenced": true,
+    "history_modified": false
+  },
+  "dependencies": [
+    {
+      "id": "m4_compatibility_matrix",
+      "path": "evidence/m4/compatibility-matrix.json",
+      "status": "available",
+      "reason": null
+    },
+    {
+      "id": "m4_oss_security_baseline",
+      "path": "evidence/m4/m4-oss-security-baseline.json",
+      "status": "available",
+      "reason": null
+    },
+    {
+      "id": "m4_package_readiness",
+      "path": "evidence/m4/m4-package-readiness.json",
+      "status": "available",
+      "reason": null
+    },
+    {
+      "id": "m4_report",
+      "path": "docs/m4-public-proof-report.md",
+      "status": "available",
+      "reason": null
+    },
+    {
+      "id": "m4_status",
+      "path": "tasks/prd-m4-public-proof-status.json",
+      "status": "available",
+      "reason": null
+    }
+  ],
+  "blockers": [
+    {
+      "id": "vt.cursor.csi_positioning",
+      "title": "CSI cursor positioning",
+      "category": "compatibility",
+      "source_path": "evidence/m4/compatibility-matrix.json",
+      "source_status": "not_implemented",
+      "m5_disposition": "current_evidence",
+      "owner": "terminal-core",
+      "m5_story": "US-004",
+      "current_evidence": [
+        {
+          "path": "evidence/m5/compatibility-matrix.json",
+          "status": "current",
+          "summary": "M5 compatibility matrix contains cursor positioning row."
+        }
+      ],
+      "blocked_reason": null,
+      "notes": [
+        "M4 row vt.cursor.csi_positioning is carried into the M5 compatibility baseline."
+      ]
+    },
+    {
+      "id": "vt.screen.ed_el_ech",
+      "title": "ED, EL and ECH erasure",
+      "category": "compatibility",
+      "source_path": "evidence/m4/compatibility-matrix.json",
+      "source_status": "not_implemented",
+      "m5_disposition": "current_evidence",
+      "owner": "terminal-core",
+      "m5_story": "US-005",
+      "current_evidence": [
+        {
+          "path": "evidence/m5/compatibility-matrix.json",
+          "status": "current",
+          "summary": "M5 compatibility matrix contains erasure row."
+        }
+      ],
+      "blocked_reason": null,
+      "notes": [
+        "M4 row vt.screen.erase_display_line is carried into the M5 compatibility baseline."
+      ]
+    },
+    {
+      "id": "xterm.private_modes.47_1047_1048",
+      "title": "DEC private modes 47, 1047 and 1048",
+      "category": "compatibility",
+      "source_path": "evidence/m4/compatibility-matrix.json",
+      "source_status": "not_implemented",
+      "m5_disposition": "current_evidence",
+      "owner": "terminal-core",
+      "m5_story": "US-006",
+      "current_evidence": [
+        {
+          "path": "evidence/m5/compatibility-matrix.json",
+          "status": "current",
+          "summary": "M5 compatibility matrix contains DEC private mode policy rows."
+        }
+      ],
+      "blocked_reason": null,
+      "notes": [
+        "M4 row xterm.private_modes.1047_1048 is carried into the M5 compatibility baseline."
+      ]
+    },
+    {
+      "id": "replay.real_session_derivatives",
+      "title": "Real-session replay derivatives",
+      "category": "replay",
+      "source_path": "docs/m4-public-proof-report.md",
+      "source_status": "blocked",
+      "m5_disposition": "current_evidence",
+      "owner": "terminal-fixtures",
+      "m5_story": "US-008",
+      "current_evidence": [
+        {
+          "path": "crates/terminal-fixtures/fixtures/m5-replay/codex-session.json",
+          "status": "current",
+          "summary": "Codex public-safe replay derivative exists."
+        },
+        {
+          "path": "crates/terminal-fixtures/fixtures/m5-replay/claude-code-session.json",
+          "status": "current",
+          "summary": "Claude Code public-safe replay derivative exists."
+        }
+      ],
+      "blocked_reason": null,
+      "notes": [
+        "M4 reports that real Codex and Claude Code checked-in derivatives are missing."
+      ]
+    },
+    {
+      "id": "platform.linux_macos_measurement",
+      "title": "Linux and macOS measurement",
+      "category": "platform",
+      "source_path": "docs/m4-public-proof-report.md",
+      "source_status": "not_measured",
+      "m5_disposition": "carried_forward",
+      "owner": "terminal-cli",
+      "m5_story": "US-013",
+      "current_evidence": [],
+      "blocked_reason": null,
+      "notes": [
+        "M4 measured Windows locally but left Linux and macOS runtime rows not measured."
+      ]
+    },
+    {
+      "id": "release.package_metadata",
+      "title": "Package metadata",
+      "category": "release",
+      "source_path": "evidence/m4/m4-package-readiness.json",
+      "source_status": "partial",
+      "m5_disposition": "current_evidence",
+      "owner": "workspace",
+      "m5_story": "US-014",
+      "current_evidence": [
+        {
+          "path": "evidence/m5/m5-package-readiness.json",
+          "status": "current",
+          "summary": "M5 package readiness records metadata decisions."
+        }
+      ],
+      "blocked_reason": null,
+      "notes": [
+        "M4 package readiness records incomplete Cargo package metadata."
+      ]
+    },
+    {
+      "id": "release.publish_order",
+      "title": "Publish order",
+      "category": "release",
+      "source_path": "evidence/m4/m4-package-readiness.json",
+      "source_status": "blocked",
+      "m5_disposition": "current_evidence",
+      "owner": "workspace",
+      "m5_story": "US-015",
+      "current_evidence": [
+        {
+          "path": "evidence/m5/m5-release-plan.json",
+          "status": "current",
+          "summary": "M5 release plan records dependency-safe publish order."
+        }
+      ],
+      "blocked_reason": null,
+      "notes": [
+        "M4 package dry-runs block on unpublished internal Hera dependencies."
+      ]
+    },
+    {
+      "id": "security.openssf_scorecard",
+      "title": "OpenSSF Scorecard",
+      "category": "security",
+      "source_path": "evidence/m4/m4-oss-security-baseline.json",
+      "source_status": "not_measured",
+      "m5_disposition": "current_evidence",
+      "owner": "terminal-cli",
+      "m5_story": "US-017",
+      "current_evidence": [
+        {
+          "path": "evidence/m5/m5-security-baseline.json",
+          "status": "current",
+          "summary": "M5 security baseline records Scorecard pass or blocked state."
+        }
+      ],
+      "blocked_reason": null,
+      "notes": [
+        "M4 security baseline records OpenSSF Scorecard as not measured."
+      ]
+    }
+  ]
+}

@@ -440,6 +440,45 @@ mod tests {
     }
 
     #[test]
+    fn cup_and_hvp_position_printable_cells_with_one_based_coordinates() {
+        let mut terminal = terminal(5, 3);
+
+        terminal.advance_bytes(b".....\x1b[2;4HX\x1b[3;2fY");
+        let snapshot = terminal.render_snapshot();
+
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), ".....");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[1]), "   X ");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[2]), " Y   ");
+        assert_eq!(snapshot.cursor().row(), 2);
+        assert_eq!(snapshot.cursor().column(), 2);
+    }
+
+    #[test]
+    fn csi_positioning_defaults_zero_and_clamps_without_panicking() {
+        let mut terminal = terminal(4, 2);
+
+        terminal.advance_bytes(b"abcd\x1b[HZ\x1b[;3fY\x1b[0;0HQ\x1b[99;99HW");
+        let snapshot = terminal.render_snapshot();
+
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "QbYd");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[1]), "   W");
+        assert_eq!(snapshot.cursor().row(), 1);
+        assert_eq!(snapshot.cursor().column(), 3);
+    }
+
+    #[test]
+    fn malformed_negative_positioning_does_not_panic_or_move_cursor() {
+        let mut terminal = terminal(4, 2);
+
+        terminal.advance_bytes(b"ab\x1b[-1;2HX");
+        let snapshot = terminal.render_snapshot();
+
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "abX ");
+        assert_eq!(snapshot.cursor().row(), 0);
+        assert_eq!(snapshot.cursor().column(), 3);
+    }
+
+    #[test]
     fn auto_wrap_records_wrap_metadata() {
         let mut terminal = terminal(3, 2);
 
@@ -448,6 +487,84 @@ mod tests {
 
         assert!(snapshot.viewport_rows()[0].wrapped());
         assert_eq!(snapshot.viewport_rows()[1].cells()[0].ch(), 'd');
+    }
+
+    #[test]
+    fn ed_modes_clear_viewport_regions_without_touching_scrollback() {
+        let mut erase_below = terminal(5, 3);
+        erase_below.advance_bytes(b"abcde\r\nfghij\r\nklmno\x1b[2;3H\x1b[J");
+        let snapshot = erase_below.render_snapshot();
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "abcde");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[1]), "fg   ");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[2]), "     ");
+        assert_eq!(snapshot.cursor().row(), 1);
+        assert_eq!(snapshot.cursor().column(), 2);
+        assert!(snapshot.scrollback_rows().is_empty());
+
+        let mut erase_above = terminal(5, 3);
+        erase_above.advance_bytes(b"abcde\r\nfghij\r\nklmno\x1b[2;3H\x1b[1J");
+        let snapshot = erase_above.render_snapshot();
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "     ");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[1]), "   ij");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[2]), "klmno");
+
+        let mut erase_all = terminal(5, 3);
+        erase_all.advance_bytes(b"abcde\r\nfghij\r\nklmno\x1b[2J");
+        let snapshot = erase_all.render_snapshot();
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "     ");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[1]), "     ");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[2]), "     ");
+    }
+
+    #[test]
+    fn el_modes_preserve_cursor_and_clear_only_active_row() {
+        let mut erase_right = terminal(6, 2);
+        erase_right.advance_bytes(b"abcdef\r\nuvwxyz\x1b[1;3H\x1b[K");
+        let snapshot = erase_right.render_snapshot();
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "ab    ");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[1]), "uvwxyz");
+        assert_eq!(snapshot.cursor().row(), 0);
+        assert_eq!(snapshot.cursor().column(), 2);
+
+        let mut erase_left = terminal(6, 1);
+        erase_left.advance_bytes(b"abcdef\x1b[1;3H\x1b[1K");
+        let snapshot = erase_left.render_snapshot();
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "   def");
+        assert_eq!(snapshot.cursor().column(), 2);
+
+        let mut erase_all = terminal(6, 1);
+        erase_all.advance_bytes(b"abcdef\x1b[1;3H\x1b[2K");
+        let snapshot = erase_all.render_snapshot();
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "      ");
+        assert_eq!(snapshot.cursor().column(), 2);
+    }
+
+    #[test]
+    fn ech_clears_characters_without_shifting_following_cells() {
+        let mut terminal = terminal(6, 1);
+
+        terminal.advance_bytes(b"abcdef\x1b[1;3H\x1b[2X");
+        let snapshot = terminal.render_snapshot();
+
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "ab  ef");
+        assert_eq!(snapshot.cursor().row(), 0);
+        assert_eq!(snapshot.cursor().column(), 2);
+    }
+
+    #[test]
+    fn unsupported_erasure_parameter_records_action_and_preserves_state() {
+        let mut terminal = terminal(5, 1);
+
+        terminal.advance_bytes(b"abc\x1b[99J");
+        let snapshot = terminal.render_snapshot();
+
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "abc  ");
+        assert!(terminal.actions().iter().any(|action| matches!(
+            action,
+            TerminalAction::Unsupported(sequence)
+                if sequence.kind() == UnsupportedSequenceKind::Other
+                    && sequence.diagnostic().contains("unsupported ED mode 99")
+        )));
     }
 
     #[test]
@@ -507,20 +624,68 @@ mod tests {
     }
 
     #[test]
-    fn unsupported_alternate_screen_variant_records_unsupported_action() {
+    fn dec_private_47_switches_between_primary_and_alternate_screens() {
         let mut terminal = terminal(3, 2);
 
-        terminal.advance_bytes(b"p\x1b[?47h");
+        terminal.advance_bytes(b"p\r\nq\x1b[?47ha");
+        let alternate = terminal.render_snapshot();
+
+        assert_eq!(alternate.active_screen(), ScreenIdentity::Alternate);
+        assert_eq!(viewport_text(&alternate.viewport_rows()[0]), "a  ");
+        assert!(alternate.scrollback_rows().is_empty());
+
+        terminal.advance_bytes(b"\x1b[?47l");
+        let primary = terminal.render_snapshot();
+
+        assert_eq!(primary.active_screen(), ScreenIdentity::Primary);
+        assert_eq!(viewport_text(&primary.viewport_rows()[0]), "p  ");
+        assert_eq!(viewport_text(&primary.viewport_rows()[1]), "q  ");
+    }
+
+    #[test]
+    fn dec_private_1047_returns_to_primary_and_clears_alternate_on_reset() {
+        let mut terminal = terminal(3, 2);
+
+        terminal.advance_bytes(b"p\r\nq\x1b[?1047ha\x1b[?1047l\x1b[?1047h");
+        let alternate = terminal.render_snapshot();
+
+        assert_eq!(alternate.active_screen(), ScreenIdentity::Alternate);
+        assert_eq!(viewport_text(&alternate.viewport_rows()[0]), "   ");
+        assert_eq!(terminal.scrollback_len(), 0);
+
+        terminal.advance_bytes(b"\x1b[?1047l");
+        let primary = terminal.render_snapshot();
+
+        assert_eq!(primary.active_screen(), ScreenIdentity::Primary);
+        assert_eq!(viewport_text(&primary.viewport_rows()[0]), "p  ");
+        assert_eq!(viewport_text(&primary.viewport_rows()[1]), "q  ");
+    }
+
+    #[test]
+    fn dec_private_1048_saves_and_restores_cursor_on_active_screen() {
+        let mut terminal = terminal(5, 2);
+
+        terminal.advance_bytes(b"ab\x1b[?1048h\x1b[2;5Hc\x1b[?1048lZ");
         let snapshot = terminal.render_snapshot();
 
         assert_eq!(snapshot.active_screen(), ScreenIdentity::Primary);
-        assert_eq!(snapshot.viewport_rows()[0].cells()[0].ch(), 'p');
-        assert!(terminal.actions().iter().any(|action| matches!(
-            action,
-            TerminalAction::Unsupported(sequence)
-                if sequence.kind() == UnsupportedSequenceKind::Other
-                    && sequence.diagnostic().contains("alternate-screen private mode 47")
-        )));
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "abZ  ");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[1]), "    c");
+        assert_eq!(snapshot.cursor().row(), 0);
+        assert_eq!(snapshot.cursor().column(), 3);
+    }
+
+    #[test]
+    fn dec_private_1049_restores_primary_cursor_after_alternate_screen() {
+        let mut terminal = terminal(5, 2);
+
+        terminal.advance_bytes(b"ab\x1b[?1049hxy\x1b[?1049lZ");
+        let snapshot = terminal.render_snapshot();
+
+        assert_eq!(snapshot.active_screen(), ScreenIdentity::Primary);
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "abZ  ");
+        assert_eq!(snapshot.cursor().row(), 0);
+        assert_eq!(snapshot.cursor().column(), 3);
     }
 
     #[test]

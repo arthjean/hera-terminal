@@ -1,0 +1,117 @@
+{
+  "schema": "hera.m5_replay_verification",
+  "version": 1,
+  "generated_at": "2026-07-04T15:19:53Z",
+  "command": "terminal-cli verify-m5-replay crates/terminal-fixtures/fixtures/m5-replay --json-output evidence/m5/m5-replay-verification.json",
+  "status": "pass",
+  "fixtures": [
+    {
+      "fixture_id": "claude-code-session",
+      "title": "Scrubbed Claude Code replay derivative",
+      "agent": "claude_code",
+      "status": "pass",
+      "event_count": 2,
+      "event_counts": {
+        "output": 1,
+        "generated_output": 0,
+        "resize": 0,
+        "marker": 1,
+        "unsupported": 0
+      },
+      "logical_lines_processed": 5,
+      "output_bytes": 168,
+      "elapsed_ms": 0,
+      "timeout_budget_ms": 5000,
+      "memory_budget_bytes": 8388608,
+      "scrollback_rows": 0,
+      "scrollback_byte_len": 0,
+      "discarded_rows": 0,
+      "final_snapshot_hash": "fnv1a64:cb4426b165f8540d",
+      "final_snapshot_bytes": 429404,
+      "notes": [
+        "Scrubbed derivative: command shape, tool labels and terminal volume are preserved; raw prompts, local paths and tokens are omitted."
+      ]
+    },
+    {
+      "fixture_id": "codex-session",
+      "title": "Scrubbed Codex CLI replay derivative",
+      "agent": "codex",
+      "status": "pass",
+      "event_count": 2,
+      "event_counts": {
+        "output": 1,
+        "generated_output": 0,
+        "resize": 0,
+        "marker": 1,
+        "unsupported": 0
+      },
+      "logical_lines_processed": 5,
+      "output_bytes": 138,
+      "elapsed_ms": 0,
+      "timeout_budget_ms": 5000,
+      "memory_budget_bytes": 8388608,
+      "scrollback_rows": 0,
+      "scrollback_byte_len": 0,
+      "discarded_rows": 0,
+      "final_snapshot_hash": "fnv1a64:c1386dccafae6418",
+      "final_snapshot_bytes": 429404,
+      "notes": [
+        "Scrubbed derivative: command shape, tool labels and terminal volume are preserved; raw prompts, local paths and tokens are omitted."
+      ]
+    },
+    {
+      "fixture_id": "long-session-100k",
+      "title": "Synthetic long-session replay coverage with 100k lines",
+      "agent": "long_session",
+      "status": "pass",
+      "event_count": 2,
+      "event_counts": {
+        "output": 0,
+        "generated_output": 1,
+        "resize": 0,
+        "marker": 1,
+        "unsupported": 0
+      },
+      "logical_lines_processed": 100000,
+      "output_bytes": 2100000,
+      "elapsed_ms": 1119,
+      "timeout_budget_ms": 5000,
+      "memory_budget_bytes": 8388608,
+      "scrollback_rows": 147,
+      "scrollback_byte_len": 1041936,
+      "discarded_rows": 99829,
+      "final_snapshot_hash": "fnv1a64:c4b791645cd03abd",
+      "final_snapshot_bytes": 1954959,
+      "notes": [
+        "Generated public workload records discarded-row counts and uses Hera-owned scrollback bytes as the memory budget metric."
+      ]
+    },
+    {
+      "fixture_id": "rapid-output",
+      "title": "Synthetic rapid-output replay coverage",
+      "agent": "rapid_output",
+      "status": "pass",
+      "event_count": 2,
+      "event_counts": {
+        "output": 0,
+        "generated_output": 1,
+        "resize": 0,
+        "marker": 1,
+        "unsupported": 0
+      },
+      "logical_lines_processed": 5000,
+      "output_bytes": 100000,
+      "elapsed_ms": 54,
+      "timeout_budget_ms": 5000,
+      "memory_budget_bytes": 8388608,
+      "scrollback_rows": 147,
+      "scrollback_byte_len": 1041936,
+      "discarded_rows": 4829,
+      "final_snapshot_hash": "fnv1a64:f3b9d123aa1118af",
+      "final_snapshot_bytes": 1954762,
+      "notes": [
+        "Synthetic public rapid-output workload. It preserves volume and timing shape without private terminal content."
+      ]
+    }
+  ]
+}

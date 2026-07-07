@@ -610,6 +610,7 @@ dependencies = [
  "terminal-core",
  "terminal-fixtures",
  "terminal-pty",
+ "toml",
 ]
 
 [[package]]

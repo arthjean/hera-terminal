@@ -1,6 +1,6 @@
 # Research Map
 
-Status: M4 public proof complete, M5 compatibility and release hardening recommended
+Status: M5 final report recorded, M6 compatibility and release hardening recommended
 Date: 2026-07-04
 Scope: architecture research and decision register for `Hera`, not implementation.
 
@@ -1152,32 +1152,41 @@ These are the public specs/docs worth keeping near the repo:
 | Smallest Paneflow API? | Byte ingestion, render snapshot, viewport query, snapshot/replay, semantic observer events. No Paneflow types. |
 | Tests beyond local confidence? | Upstream-inspired golden fixtures, xterm/VTTEST/esctest2 corpus, fuzzing, ConPTY replay corpus and memory benchmarks. |
 
-## M4 Closeout And M5 Recommendation
+## M5 Final Report And M6 Recommendation
 
-M1 through M4 are complete as staged proof, not as release maturity. Hera now has
-a headless core, PTY runtime boundary, Paneflow shadow dogfood evidence and a
-public M4 proof package.
+M1 through M5 now provide staged proof, not release maturity. Hera has a
+headless core, PTY runtime boundary, Paneflow shadow evidence contracts, public
+M4 proof artifacts and an M5 compatibility/release hardening package.
 
-M4 public proof lives in `docs/m4-public-proof-report.md`. It links the evidence
-contract, compatibility matrix, benchmark and memory reports, replay corpus,
-Paneflow dogfood demo procedure, API examples, package readiness evidence and
-OSS security baseline.
+M4 public proof lives in `docs/m4-public-proof-report.md`. M5 final evidence
+lives in `docs/m5-compatibility-release-hardening-report.md` and under
+`evidence/m5/`. It covers the baseline contract, fixture-backed compatibility
+matrix, scrubbed replay derivatives, Paneflow shadow scenario contract,
+platform rows, package readiness, API audit and security posture.
 
-The current verdict is partial public proof. Replay determinism, bounded
-Hera-owned memory counters, public API examples and redaction discipline are
-solid enough to inspect. Terminal compatibility breadth, Linux/macOS runtime
-measurements, package metadata, internal crate publish order, external OpenSSF
-Scorecard coverage and broad real-session dogfood are still gaps.
+The current verdict is still not host replacement or public pre-release
+packaging. Compatibility and replay evidence improved materially: CSI
+positioning, ED/EL/ECH and DEC private modes 47/1047/1048 are fixture-backed,
+and Codex/Claude Code derivatives replay deterministically. The remaining
+blockers are operational and release-facing: the live Paneflow shadow rerun is
+checked in as a scrubbed failed summary with 28 P0 mismatch reports,
+Linux/macOS are blocked rather than measured, dependent package dry-runs fail
+on unpublished Hera crates, `cargo-semver-checks` is unavailable, `cargo-audit`
+and Scorecard are unavailable locally, and `cargo-deny` fails without an
+explicit license policy.
 
-Recommended M5: compatibility and release hardening. Do not replace Paneflow's
-terminal path yet. The next chantier should expand fixture-backed VT coverage,
-resolve or explicitly defer CSI positioning, ED/EL/ECH and DEC private mode
-gaps, add scrubbed real-session replay derivatives, measure Linux and macOS,
-complete package metadata and publish-order decisions, and rerun a broader
-Paneflow shadow dogfood scenario.
+Recommended M6: another focused compatibility and release hardening milestone.
+Do not replace Paneflow's terminal path yet. Do not publish Hera crates yet.
+M6 should fix the live Paneflow shadow mismatches and produce a zero-P0
+scrubbed summary, measure Linux and macOS via local runners or CI, add explicit
+cargo-deny policy, run cargo-audit or equivalent advisory evidence, run OpenSSF
+Scorecard through CLI or GitHub Action, decide package staging for unpublished
+Hera crates and run semver baseline tooling before any stable public API
+promise.
 
-The threshold to unlock host replacement experiments is no P0 terminal mismatch
-in longer Paneflow shadow dogfood, pass or explicitly deferred status for core
-compatibility gaps, platform measurement rows for Windows, Linux and macOS, and
-clean package readiness for intended public crates without running `cargo
-publish`.
+The threshold to unlock host replacement experiments remains no P0 terminal
+mismatch in longer Paneflow shadow dogfood, pass or accepted blocked status for
+platform rows, and no release-blocking security finding. The threshold to unlock
+public pre-release packaging is clean dry-runs or an accepted staging plan for
+all intended public crates, plus security and semver evidence without hidden
+blocked checks.

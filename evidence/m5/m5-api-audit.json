@@ -1,0 +1,154 @@
+{
+  "schema": "hera.m5_api_audit",
+  "version": 1,
+  "generated_at": "2026-07-04T15:41:40Z",
+  "source_command": "terminal-cli generate-m5-api-audit --output evidence/m5/m5-api-audit.json",
+  "status": "pass",
+  "sources": [
+    {
+      "label": "Rust API Guidelines checklist",
+      "url": "https://rust-lang.github.io/api-guidelines/checklist.html"
+    },
+    {
+      "label": "Cargo publishing guidance",
+      "url": "https://doc.rust-lang.org/cargo/reference/publishing.html"
+    },
+    {
+      "label": "docs.rs metadata",
+      "url": "https://docs.rs/about/metadata"
+    }
+  ],
+  "public_crates": [
+    {
+      "name": "terminal-protocol",
+      "boundary": "Hera-owned protocol and replay data types.",
+      "exported_surface": [
+        "TerminalAction",
+        "CsiSequence",
+        "OscCommand",
+        "Payload"
+      ],
+      "docs_status": "pass",
+      "errors_status": "pass",
+      "common_traits_status": "pass",
+      "boundary_leak_status": "pass"
+    },
+    {
+      "name": "terminal-render-model",
+      "boundary": "Renderer-neutral cells, rows, cursor and snapshot data.",
+      "exported_surface": [
+        "RenderSnapshot",
+        "RenderCell",
+        "ViewportRow",
+        "ImagePlaceholder"
+      ],
+      "docs_status": "pass",
+      "errors_status": "pass",
+      "common_traits_status": "pass",
+      "boundary_leak_status": "pass"
+    },
+    {
+      "name": "terminal-core",
+      "boundary": "Headless terminal state and parser integration with no PTY or renderer runtime.",
+      "exported_surface": [
+        "Terminal",
+        "TerminalConfig",
+        "TerminalError",
+        "ScrollbackConfig"
+      ],
+      "docs_status": "pass",
+      "errors_status": "pass",
+      "common_traits_status": "pass",
+      "boundary_leak_status": "pass"
+    },
+    {
+      "name": "terminal-fixtures",
+      "boundary": "Fixture, replay and milestone evidence validation utilities.",
+      "exported_surface": [
+        "FixtureRunner",
+        "M5EvidenceManifest",
+        "M5PackageReadiness"
+      ],
+      "docs_status": "pass",
+      "errors_status": "pass",
+      "common_traits_status": "pass",
+      "boundary_leak_status": "pass"
+    },
+    {
+      "name": "terminal-pty",
+      "boundary": "PTY runtime abstraction that keeps portable-pty out of public Hera state.",
+      "exported_surface": [
+        "PtyCommand",
+        "PtySessionRunner",
+        "PtyRuntimeConfig",
+        "PtyError"
+      ],
+      "docs_status": "pass",
+      "errors_status": "pass",
+      "common_traits_status": "pass",
+      "boundary_leak_status": "pass"
+    },
+    {
+      "name": "terminal-cli",
+      "boundary": "Debug and evidence commands over the public Hera crates.",
+      "exported_surface": [
+        "terminal-cli binary commands"
+      ],
+      "docs_status": "pass",
+      "errors_status": "pass",
+      "common_traits_status": "pass",
+      "boundary_leak_status": "pass"
+    }
+  ],
+  "boundary_checks": [
+    {
+      "id": "api.parser_boundary",
+      "status": "pass",
+      "evidence": "terminal-core public API tests reject vte parser type exposure."
+    },
+    {
+      "id": "api.pty_boundary",
+      "status": "pass",
+      "evidence": "terminal-core manifest stays PTY-free and terminal-pty tests reject portable-pty type exposure."
+    },
+    {
+      "id": "api.host_renderer_boundary",
+      "status": "pass",
+      "evidence": "No public crate exposes Paneflow, GPUI, windowing or platform renderer types."
+    }
+  ],
+  "semver_baseline": {
+    "command": "cargo semver-checks check-release --baseline-rev HEAD~1",
+    "status": "blocked",
+    "exit_code": null,
+    "summary": "error: no such command: `semver-checks`\nhelp: view all installed commands with `cargo --list`\nhelp: find a package to install `semver-checks` with `cargo search cargo-semver-checks`",
+    "blocked_reason": "cargo-semver-checks is not installed as a cargo subcommand."
+  },
+  "findings": [
+    {
+      "id": "api.boundary_leaks",
+      "severity": "p0",
+      "status": "resolved",
+      "summary": "No vte, portable-pty, Paneflow, GPUI or platform type leak is present across the public boundary.",
+      "m6_blocker": false
+    },
+    {
+      "id": "api.semver_baseline_tooling",
+      "severity": "p1",
+      "status": "accepted_m6_blocker",
+      "summary": "cargo-semver-checks coverage is recorded, but unavailable local tooling remains an M6 release blocker if it cannot run before publication.",
+      "m6_blocker": true
+    },
+    {
+      "id": "api.milestone_prefixed_public_names",
+      "severity": "p2",
+      "status": "accepted_m6_blocker",
+      "summary": "M1/M2/M5-prefixed constants remain useful evidence names now, but should be renamed or explicitly accepted before a semver-stable release.",
+      "m6_blocker": true
+    }
+  ],
+  "notes": [
+    "API audit checks release boundaries rather than promising semver stability.",
+    "cargo doc --workspace --no-deps remains the documentation render gate."
+  ]
+}

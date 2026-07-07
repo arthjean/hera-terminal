@@ -1,0 +1,54 @@
+{
+  "schema": "hera.m5_public_replay",
+  "version": 1,
+  "id": "long-session-100k",
+  "title": "Synthetic long-session replay coverage with 100k lines",
+  "agent": "long_session",
+  "source": "synthetic_stress",
+  "privacy": "synthetic_public",
+  "generated_at": "2026-07-04T15:00:41Z",
+  "redaction": {
+    "status": "passed",
+    "policy_version": 1,
+    "checked_at": "2026-07-04T15:00:41Z",
+    "reject_patterns": [],
+    "normalized_fields": [
+      "elapsed_ms",
+      "prompts",
+      "local_paths",
+      "tokens"
+    ]
+  },
+  "initial_size": {
+    "columns": 80,
+    "rows": 24
+  },
+  "scrollback": {
+    "max_lines": 10000,
+    "max_bytes": 1048576
+  },
+  "replay_policy": {
+    "timeout_ms": 5000,
+    "memory_budget_bytes": 8388608,
+    "expected_min_logical_lines": 100000,
+    "require_discarded_rows": true
+  },
+  "events": [
+    {
+      "kind": "generated_output",
+      "elapsed_ms": 0,
+      "generated_line_prefix": "m5-long-line-",
+      "generated_line_count": 100000,
+      "metadata": {}
+    },
+    {
+      "kind": "marker",
+      "elapsed_ms": 1000,
+      "label": "long-session-complete",
+      "metadata": {}
+    }
+  ],
+  "notes": [
+    "Generated public workload records discarded-row counts and uses Hera-owned scrollback bytes as the memory budget metric."
+  ]
+}

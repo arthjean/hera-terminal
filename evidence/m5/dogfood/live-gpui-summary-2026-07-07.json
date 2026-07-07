@@ -1,0 +1,123 @@
+{
+  "schema": "hera.m5_paneflow_shadow_dogfood_live_summary",
+  "version": 1,
+  "generated_at": "2026-07-07T19:26:30Z",
+  "status": "failed",
+  "source_command": "manual: PANEFLOW_HERA_DOGFOOD=shadow PANEFLOW_HERA_DOGFOOD_RETENTION=raw_local PANEFLOW_IPC_SCRIPTING=1 target/debug/paneflow.exe; workspace.up two scripted panes",
+  "run": {
+    "mode": "shadow",
+    "duration_seconds_observed": 19,
+    "restored_shadow_sessions": 5,
+    "dogfood_workspace_panes": 2,
+    "completed_45_minute_target": false,
+    "stopped_reason": "P0 mismatch reports were produced during the scripted two-pane run before the 45-minute target could be meaningful"
+  },
+  "retention": {
+    "private_artifacts_retained_outside_hera": true,
+    "public_summary_is_scrubbed": true
+  },
+  "mismatch_summary": {
+    "total_reports": 28,
+    "p0": 28,
+    "p1": 0,
+    "p2": 0,
+    "fields": [
+      {
+        "field_path": "$.style_buckets",
+        "reports": 17
+      },
+      {
+        "field_path": "$.viewport_lines[0]",
+        "reports": 2
+      },
+      {
+        "field_path": "$.viewport_lines[11]",
+        "reports": 1
+      },
+      {
+        "field_path": "$.viewport_lines[12]",
+        "reports": 1
+      },
+      {
+        "field_path": "$.viewport_lines[13]",
+        "reports": 1
+      },
+      {
+        "field_path": "$.viewport_lines[14]",
+        "reports": 1
+      },
+      {
+        "field_path": "$.viewport_lines[15]",
+        "reports": 1
+      },
+      {
+        "field_path": "$.viewport_lines[16]",
+        "reports": 1
+      },
+      {
+        "field_path": "$.viewport_lines[17]",
+        "reports": 1
+      },
+      {
+        "field_path": "$.viewport_lines[18]",
+        "reports": 1
+      },
+      {
+        "field_path": "$.viewport_lines[19]",
+        "reports": 1
+      }
+    ],
+    "panes": [
+      {
+        "label": "scripted_burst_output",
+        "reports": 18
+      },
+      {
+        "label": "scripted_long_output",
+        "reports": 10
+      }
+    ]
+  },
+  "sanitized_reports": [
+    {
+      "field_family": "viewport_lines",
+      "field_paths": [
+        "$.viewport_lines[0]"
+      ],
+      "reports": 2,
+      "dimensions": "120x40",
+      "summary": "Bootstrap prompt fragments were ordered differently between Paneflow and Hera."
+    },
+    {
+      "field_family": "style_buckets",
+      "field_paths": [
+        "$.style_buckets"
+      ],
+      "reports": 17,
+      "dimensions": "120x40",
+      "summary": "Scripted burst output accumulated style bucket counts differently between Paneflow and Hera."
+    },
+    {
+      "field_family": "viewport_lines",
+      "field_paths": [
+        "$.viewport_lines[11]",
+        "$.viewport_lines[12]",
+        "$.viewport_lines[13]",
+        "$.viewport_lines[14]",
+        "$.viewport_lines[15]",
+        "$.viewport_lines[16]",
+        "$.viewport_lines[17]",
+        "$.viewport_lines[18]",
+        "$.viewport_lines[19]"
+      ],
+      "reports": 9,
+      "dimensions": "120x40",
+      "summary": "Scripted long-output rows were vertically aligned differently between Paneflow and Hera."
+    }
+  ],
+  "notes": [
+    "This public file intentionally omits terminal text, local paths, user names, host names, IP addresses and raw report paths.",
+    "The private mismatch JSON files stayed in Paneflow local audit storage outside the Hera repository.",
+    "Because P0 mismatches were produced immediately, the run was stopped early instead of continuing toward the 45-minute target."
+  ]
+}

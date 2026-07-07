@@ -1,0 +1,53 @@
+{
+  "schema": "hera.m5_public_replay",
+  "version": 1,
+  "id": "claude-code-session",
+  "title": "Scrubbed Claude Code replay derivative",
+  "agent": "claude_code",
+  "source": "scrubbed_capture_derivative",
+  "privacy": "scrubbed_public",
+  "generated_at": "2026-07-04T15:00:41Z",
+  "redaction": {
+    "status": "passed",
+    "policy_version": 1,
+    "checked_at": "2026-07-04T15:00:41Z",
+    "reject_patterns": [],
+    "normalized_fields": [
+      "elapsed_ms",
+      "prompts",
+      "local_paths",
+      "tokens"
+    ]
+  },
+  "initial_size": {
+    "columns": 100,
+    "rows": 30
+  },
+  "scrollback": {
+    "max_lines": 10000,
+    "max_bytes": 8388608
+  },
+  "replay_policy": {
+    "timeout_ms": 5000,
+    "memory_budget_bytes": 8388608,
+    "expected_min_logical_lines": 4,
+    "require_discarded_rows": false
+  },
+  "events": [
+    {
+      "kind": "output",
+      "elapsed_ms": 0,
+      "data": "claude-code> plan updated\r\n[edit] crates/terminal-core/src/state.rs\r\n[tool:cargo] cargo clippy --workspace --all-targets\r\nwarning: none\r\nclaude-code> ready for review\r\n",
+      "metadata": {}
+    },
+    {
+      "kind": "marker",
+      "elapsed_ms": 100,
+      "label": "agent-derivative-complete",
+      "metadata": {}
+    }
+  ],
+  "notes": [
+    "Scrubbed derivative: command shape, tool labels and terminal volume are preserved; raw prompts, local paths and tokens are omitted."
+  ]
+}

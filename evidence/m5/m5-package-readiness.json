@@ -1,0 +1,327 @@
+{
+  "schema": "hera.m5_package_readiness",
+  "version": 1,
+  "generated_at": "2026-07-04T15:41:36Z",
+  "source_command": "terminal-cli generate-m5-package-readiness --output evidence/m5/m5-package-readiness.json --release-plan-output evidence/m5/m5-release-plan.json",
+  "status": "blocked",
+  "release_plan_path": "evidence/m5/m5-release-plan.json",
+  "crates": [
+    {
+      "name": "terminal-protocol",
+      "manifest_path": "crates/terminal-protocol/Cargo.toml",
+      "publish_intent": "intended_public",
+      "package_status": "pass",
+      "description": "Structured protocol and replay types for Hera terminal streams.",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/arthjean/hera-terminal",
+      "documentation": "https://docs.rs/terminal-protocol",
+      "readme": "README.md",
+      "keywords": [
+        "terminal",
+        "vt",
+        "protocol",
+        "hera"
+      ],
+      "categories": [
+        "command-line-utilities",
+        "development-tools"
+      ],
+      "docs_rs": {
+        "all_features": true,
+        "default_target": "x86_64-unknown-linux-gnu",
+        "targets": [
+          "x86_64-pc-windows-msvc",
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu"
+        ],
+        "cargo_args": [],
+        "rustdoc_args": []
+      },
+      "metadata_omissions": [
+        {
+          "field": "homepage",
+          "reason": "No dedicated crate homepage exists beyond repository and docs.rs at M5."
+        }
+      ],
+      "dry_run": {
+        "command": "cargo package -p terminal-protocol --allow-dirty --no-verify",
+        "status": "pass",
+        "exit_code": 0,
+        "duration_ms": 90,
+        "stdout_summary": "",
+        "stderr_summary": "Packaging terminal-protocol v0.1.0 (.\\crates\\terminal-protocol)\nPackaged 6 files, 13.4KiB (3.6KiB compressed)",
+        "package_archive": "target/package/terminal-protocol-0.1.0.crate",
+        "blocked_reason": null
+      },
+      "notes": [
+        "Crate is intended for public pre-release packaging, but not published by M5."
+      ]
+    },
+    {
+      "name": "terminal-render-model",
+      "manifest_path": "crates/terminal-render-model/Cargo.toml",
+      "publish_intent": "intended_public",
+      "package_status": "pass",
+      "description": "Renderer-neutral viewport and cell model for Hera.",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/arthjean/hera-terminal",
+      "documentation": "https://docs.rs/terminal-render-model",
+      "readme": "README.md",
+      "keywords": [
+        "terminal",
+        "render",
+        "snapshot",
+        "hera"
+      ],
+      "categories": [
+        "command-line-utilities",
+        "development-tools"
+      ],
+      "docs_rs": {
+        "all_features": true,
+        "default_target": "x86_64-unknown-linux-gnu",
+        "targets": [
+          "x86_64-pc-windows-msvc",
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu"
+        ],
+        "cargo_args": [],
+        "rustdoc_args": []
+      },
+      "metadata_omissions": [
+        {
+          "field": "homepage",
+          "reason": "No dedicated crate homepage exists beyond repository and docs.rs at M5."
+        }
+      ],
+      "dry_run": {
+        "command": "cargo package -p terminal-render-model --allow-dirty --no-verify",
+        "status": "pass",
+        "exit_code": 0,
+        "duration_ms": 91,
+        "stdout_summary": "",
+        "stderr_summary": "Packaging terminal-render-model v0.1.0 (.\\crates\\terminal-render-model)\nPackaged 6 files, 11.6KiB (3.1KiB compressed)",
+        "package_archive": "target/package/terminal-render-model-0.1.0.crate",
+        "blocked_reason": null
+      },
+      "notes": [
+        "Crate is intended for public pre-release packaging, but not published by M5."
+      ]
+    },
+    {
+      "name": "terminal-core",
+      "manifest_path": "crates/terminal-core/Cargo.toml",
+      "publish_intent": "intended_public",
+      "package_status": "blocked",
+      "description": "Headless terminal state engine for Hera.",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/arthjean/hera-terminal",
+      "documentation": "https://docs.rs/terminal-core",
+      "readme": "README.md",
+      "keywords": [
+        "terminal",
+        "vt",
+        "replay",
+        "hera"
+      ],
+      "categories": [
+        "command-line-utilities",
+        "development-tools"
+      ],
+      "docs_rs": {
+        "all_features": true,
+        "default_target": "x86_64-unknown-linux-gnu",
+        "targets": [
+          "x86_64-pc-windows-msvc",
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu"
+        ],
+        "cargo_args": [],
+        "rustdoc_args": []
+      },
+      "metadata_omissions": [
+        {
+          "field": "homepage",
+          "reason": "No dedicated crate homepage exists beyond repository and docs.rs at M5."
+        }
+      ],
+      "dry_run": {
+        "command": "cargo package -p terminal-core --allow-dirty --no-verify",
+        "status": "failed",
+        "exit_code": 101,
+        "duration_ms": 230,
+        "stdout_summary": "",
+        "stderr_summary": "Packaging terminal-core v0.1.0 (.\\crates\\terminal-core)\nUpdating crates.io index\nerror: failed to prepare local package for uploading\nCaused by:\nno matching package named `terminal-protocol` found\nlocation searched: crates.io index\nrequired by package `terminal-core v0.1.0 (.\\crates\\terminal-core)`",
+        "package_archive": null,
+        "blocked_reason": null
+      },
+      "notes": [
+        "Crate is intended for public pre-release packaging, but not published by M5."
+      ]
+    },
+    {
+      "name": "terminal-fixtures",
+      "manifest_path": "crates/terminal-fixtures/Cargo.toml",
+      "publish_intent": "intended_public",
+      "package_status": "blocked",
+      "description": "Fixture, replay and evidence validation utilities for Hera.",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/arthjean/hera-terminal",
+      "documentation": "https://docs.rs/terminal-fixtures",
+      "readme": "README.md",
+      "keywords": [
+        "terminal",
+        "fixtures",
+        "replay",
+        "hera"
+      ],
+      "categories": [
+        "command-line-utilities",
+        "development-tools"
+      ],
+      "docs_rs": {
+        "all_features": true,
+        "default_target": "x86_64-unknown-linux-gnu",
+        "targets": [
+          "x86_64-pc-windows-msvc",
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu"
+        ],
+        "cargo_args": [],
+        "rustdoc_args": []
+      },
+      "metadata_omissions": [
+        {
+          "field": "homepage",
+          "reason": "No dedicated crate homepage exists beyond repository and docs.rs at M5."
+        }
+      ],
+      "dry_run": {
+        "command": "cargo package -p terminal-fixtures --allow-dirty --no-verify",
+        "status": "failed",
+        "exit_code": 101,
+        "duration_ms": 184,
+        "stdout_summary": "",
+        "stderr_summary": "Packaging terminal-fixtures v0.1.0 (.\\crates\\terminal-fixtures)\nUpdating crates.io index\nerror: failed to prepare local package for uploading\nCaused by:\nno matching package named `terminal-core` found\nlocation searched: crates.io index\nrequired by package `terminal-fixtures v0.1.0 (.\\crates\\terminal-fixtures)`",
+        "package_archive": null,
+        "blocked_reason": null
+      },
+      "notes": [
+        "Crate is intended for public pre-release packaging, but not published by M5."
+      ]
+    },
+    {
+      "name": "terminal-pty",
+      "manifest_path": "crates/terminal-pty/Cargo.toml",
+      "publish_intent": "intended_public",
+      "package_status": "blocked",
+      "description": "PTY runtime boundary for Hera terminal sessions.",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/arthjean/hera-terminal",
+      "documentation": "https://docs.rs/terminal-pty",
+      "readme": "README.md",
+      "keywords": [
+        "terminal",
+        "pty",
+        "runtime",
+        "hera"
+      ],
+      "categories": [
+        "command-line-utilities",
+        "development-tools"
+      ],
+      "docs_rs": {
+        "all_features": true,
+        "default_target": "x86_64-unknown-linux-gnu",
+        "targets": [
+          "x86_64-pc-windows-msvc",
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu"
+        ],
+        "cargo_args": [],
+        "rustdoc_args": []
+      },
+      "metadata_omissions": [
+        {
+          "field": "homepage",
+          "reason": "No dedicated crate homepage exists beyond repository and docs.rs at M5."
+        }
+      ],
+      "dry_run": {
+        "command": "cargo package -p terminal-pty --allow-dirty --no-verify",
+        "status": "failed",
+        "exit_code": 101,
+        "duration_ms": 715,
+        "stdout_summary": "",
+        "stderr_summary": "Packaging terminal-pty v0.1.0 (.\\crates\\terminal-pty)\nUpdating crates.io index\nerror: failed to prepare local package for uploading\nCaused by:\nno matching package named `terminal-core` found\nlocation searched: crates.io index\nrequired by package `terminal-pty v0.1.0 (.\\crates\\terminal-pty)`",
+        "package_archive": null,
+        "blocked_reason": null
+      },
+      "notes": [
+        "Crate is intended for public pre-release packaging, but not published by M5."
+      ]
+    },
+    {
+      "name": "terminal-cli",
+      "manifest_path": "crates/terminal-cli/Cargo.toml",
+      "publish_intent": "intended_public",
+      "package_status": "blocked",
+      "description": "Debug, replay and evidence command-line tooling for Hera.",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/arthjean/hera-terminal",
+      "documentation": "https://docs.rs/terminal-cli",
+      "readme": "README.md",
+      "keywords": [
+        "terminal",
+        "cli",
+        "replay",
+        "hera"
+      ],
+      "categories": [
+        "command-line-utilities",
+        "development-tools"
+      ],
+      "docs_rs": {
+        "all_features": true,
+        "default_target": "x86_64-unknown-linux-gnu",
+        "targets": [
+          "x86_64-pc-windows-msvc",
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu"
+        ],
+        "cargo_args": [],
+        "rustdoc_args": []
+      },
+      "metadata_omissions": [
+        {
+          "field": "homepage",
+          "reason": "No dedicated crate homepage exists beyond repository and docs.rs at M5."
+        }
+      ],
+      "dry_run": {
+        "command": "cargo package -p terminal-cli --allow-dirty --no-verify",
+        "status": "failed",
+        "exit_code": 101,
+        "duration_ms": 162,
+        "stdout_summary": "",
+        "stderr_summary": "Packaging terminal-cli v0.1.0 (.\\crates\\terminal-cli)\nUpdating crates.io index\nerror: failed to prepare local package for uploading\nCaused by:\nno matching package named `terminal-core` found\nlocation searched: crates.io index\nrequired by package `terminal-cli v0.1.0 (.\\crates\\terminal-cli)`",
+        "package_archive": null,
+        "blocked_reason": null
+      },
+      "notes": [
+        "Crate is intended for public pre-release packaging, but not published by M5."
+      ]
+    }
+  ],
+  "publish_actions": [
+    {
+      "command": "cargo publish",
+      "status": "out_of_scope",
+      "summary": "M5 performs readiness checks only. No cargo publish command was run."
+    }
+  ],
+  "notes": [
+    "All six Hera crates are intended public pre-release surfaces for this readiness pass.",
+    "Package archives are dry-run artifacts under target/package and are not release uploads."
+  ]
+}

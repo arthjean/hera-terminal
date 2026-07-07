@@ -19,6 +19,15 @@ mod m4_compatibility;
 mod m4_evidence;
 mod m4_performance;
 mod m4_replay;
+mod m5_baseline;
+mod m5_compatibility;
+mod m5_dogfood;
+mod m5_evidence;
+mod m5_go_no_go;
+mod m5_platform;
+mod m5_release;
+mod m5_replay;
+mod m5_security;
 
 pub use m4_compatibility::{
     M4_COMPATIBILITY_MATRIX_SCHEMA, M4_COMPATIBILITY_MATRIX_VERSION,
@@ -46,6 +55,64 @@ pub use m4_replay::{
     M4ReplayEvent, M4ReplayEventCounts, M4ReplayExportError, M4ReplayPrivacy, M4ReplayRedaction,
     M4ReplayRedactionStatus, M4ReplaySize, M4ReplaySource, M4ReplayVerificationError,
     M4ReplayVerificationReport, M4ReplayVerificationStatus, M4ReplayVerificationSummary,
+};
+pub use m5_baseline::{
+    M5_BASELINE_SCHEMA, M5_BASELINE_VERSION, M5_MAX_BASELINE_BYTES, M5Baseline, M5BaselineBlocker,
+    M5BaselineDependency, M5BaselineDependencyStatus, M5BaselineDisposition, M5BaselineStatus,
+    M5CurrentEvidence, M5SourceMilestone,
+};
+pub use m5_compatibility::{
+    M5_COMPATIBILITY_MATRIX_SCHEMA, M5_COMPATIBILITY_MATRIX_VERSION,
+    M5_MAX_COMPATIBILITY_MATRIX_BYTES, M5CompatibilityArtifact, M5CompatibilityArtifactKind,
+    M5CompatibilityMatrix, M5CompatibilityPriority, M5CompatibilityRow, M5DeferredPolicy,
+    M5Disposition, M5FixtureCoverage, M5FixtureCoverageStatus, M5PlatformMeasurementStatus,
+    M5PlatformMeasurements, M5SourceReference, M5SourceReferenceKind,
+};
+pub use m5_dogfood::{
+    M5_MAX_DOGFOOD_REPORT_BYTES, M5_PANEFLOW_DOGFOOD_SCHEMA, M5_PANEFLOW_DOGFOOD_VERSION,
+    M5DogfoodMismatch, M5DogfoodMismatchSeverity, M5DogfoodMismatchSummary, M5DogfoodMode,
+    M5DogfoodRetention, M5DogfoodScenario, M5DogfoodStatus, M5PaneflowDogfoodReport,
+    m5_default_paneflow_dogfood_report,
+};
+pub use m5_evidence::{
+    M5_EVIDENCE_MANIFEST_SCHEMA, M5_EVIDENCE_MANIFEST_VERSION, M5_MAX_EVIDENCE_MANIFEST_BYTES,
+    M5_MAX_PUBLIC_ARTIFACT_BYTES, M5ArtifactPlatform, M5ArtifactPrivacy, M5EvidenceArtifact,
+    M5EvidenceManifest, M5RedactionPolicy, M5ReproducibilityStatus,
+};
+pub use m5_go_no_go::{
+    M5_GO_NO_GO_SCHEMA, M5_GO_NO_GO_VERSION, M5_MAX_GO_NO_GO_BYTES, M5GoNoGoCriterion,
+    M5GoNoGoPolicy, M5Outcome, M5OutcomePolicy, M5OutcomeStatus,
+};
+pub use m5_platform::{
+    M5_MAX_PLATFORM_RUNTIME_EVIDENCE_BYTES, M5_PLATFORM_RUNTIME_EVIDENCE_SCHEMA,
+    M5_PLATFORM_RUNTIME_EVIDENCE_VERSION, M5PlatformCommandId, M5PlatformCommandResult,
+    M5PlatformCommandStatus, M5PlatformEvidenceStatus, M5PlatformFreshnessPolicy, M5PlatformRow,
+    M5PlatformRows, M5PlatformRuntimeEvidence, M5RuntimePlatform, m5_required_platform_commands,
+};
+pub use m5_release::{
+    M5_API_AUDIT_SCHEMA, M5_MAX_RELEASE_EVIDENCE_BYTES, M5_PACKAGE_READINESS_SCHEMA,
+    M5_RELEASE_EVIDENCE_VERSION, M5_RELEASE_PLAN_SCHEMA, M5ActionStatus, M5ApiAudit,
+    M5ApiBoundaryCheck, M5ApiFinding, M5ApiPublicCrate, M5AuditSource, M5CheckStatus,
+    M5DocsRsPolicy, M5DryRunStatus, M5FindingSeverity, M5FindingStatus, M5MetadataOmission,
+    M5PackageCrate, M5PackageDryRun, M5PackageReadiness, M5PublishAction, M5PublishIntent,
+    M5ReadinessStatus, M5ReleasePlan, M5ReleasePlanCrate, M5SemverBaseline, M5ToolStatus,
+};
+pub use m5_replay::{
+    M5_DEFAULT_MEMORY_BUDGET_BYTES, M5_DEFAULT_REPLAY_TIMEOUT_MS, M5_MAX_GENERATED_OUTPUT_LINES,
+    M5_MAX_PUBLIC_REPLAY_EVENT_BYTES, M5_MAX_PUBLIC_REPLAY_EVENTS, M5_MAX_PUBLIC_REPLAY_FILE_BYTES,
+    M5_MAX_PUBLIC_REPLAY_OUTPUT_BYTES, M5_PUBLIC_REPLAY_SCHEMA, M5_PUBLIC_REPLAY_VERSION,
+    M5_REPLAY_VERIFICATION_SCHEMA, M5_REPLAY_VERIFICATION_VERSION, M5PublicReplayFixture,
+    M5ReplayAgent, M5ReplayEvent, M5ReplayEventCounts, M5ReplayPolicy, M5ReplayPrivacy,
+    M5ReplayRedaction, M5ReplayRedactionStatus, M5ReplayScrollback, M5ReplaySize, M5ReplaySource,
+    M5ReplayVerificationError, M5ReplayVerificationReport, M5ReplayVerificationStatus,
+    M5ReplayVerificationSummary, m5_default_replay_fixtures,
+};
+pub use m5_security::{
+    M5_MAX_SECURITY_BASELINE_BYTES, M5_SECURITY_BASELINE_SCHEMA, M5_SECURITY_BASELINE_VERSION,
+    M5SecurityBaseline, M5SecurityBaselineStatus, M5SecurityCheckStatus, M5SecurityCoverage,
+    M5SecurityCoverageCategory, M5SecurityCoverageStatus, M5SecurityFinding,
+    M5SecurityFindingSeverity, M5SecurityInstallStatus, M5SecuritySummary, M5SecurityToolCheck,
+    M5SecurityToolId,
 };
 
 pub const M1_MAX_FIXTURE_FILE_BYTES: u64 = 2 * 1024 * 1024;

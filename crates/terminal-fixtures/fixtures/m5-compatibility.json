@@ -1,0 +1,282 @@
+{
+  "fixtures": [
+    {
+      "name": "csi-cup-hvp-positioning",
+      "terminal": { "columns": 5, "rows": 3 },
+      "chunks": [
+        { "bytes": [46, 46, 46, 46, 46] },
+        { "bytes": [27, 91, 50, 59, 52, 72] },
+        { "bytes": [88] },
+        { "bytes": [27, 91, 51, 59, 50, 102] },
+        { "bytes": [89] }
+      ],
+      "expected": {
+        "cursor": { "row": 2, "column": 2, "visible": true },
+        "viewport_lines": [".....", "   X ", " Y   "],
+        "events": [
+          { "kind": "csi", "diagnostic_contains": "2;4H" },
+          { "kind": "csi", "diagnostic_contains": "3;2f" }
+        ]
+      }
+    },
+    {
+      "name": "csi-positioning-defaults-and-bounds",
+      "terminal": { "columns": 4, "rows": 2 },
+      "chunks": [
+        { "bytes": [97, 98, 99, 100] },
+        { "bytes": [27, 91, 72] },
+        { "bytes": [90] },
+        { "bytes": [27, 91, 59, 51, 102] },
+        { "bytes": [89] },
+        { "bytes": [27, 91, 48, 59, 48, 72] },
+        { "bytes": [81] },
+        { "bytes": [27, 91, 57, 57, 59, 57, 57, 72] },
+        { "bytes": [87] }
+      ],
+      "expected": {
+        "cursor": { "row": 1, "column": 3, "visible": true },
+        "viewport_lines": ["QbYd", "   W"],
+        "events": [
+          { "kind": "csi", "diagnostic_contains": "CSI 0H" },
+          { "kind": "csi", "diagnostic_contains": "0;3f" },
+          { "kind": "csi", "diagnostic_contains": "99;99H" }
+        ]
+      }
+    },
+    {
+      "name": "ed-mode-0",
+      "terminal": { "columns": 5, "rows": 3 },
+      "chunks": [
+        { "bytes": [97, 98, 99, 100, 101] },
+        { "bytes": [13, 10] },
+        { "bytes": [102, 103, 104, 105, 106] },
+        { "bytes": [13, 10] },
+        { "bytes": [107, 108, 109, 110, 111] },
+        { "bytes": [27, 91, 50, 59, 51, 72] },
+        { "bytes": [27, 91, 74] }
+      ],
+      "expected": {
+        "cursor": { "row": 1, "column": 2, "visible": true },
+        "viewport_lines": ["abcde", "fg   ", "     "],
+        "scrollback_lines": [],
+        "events": [{ "kind": "csi", "diagnostic_contains": "CSI 0J" }]
+      }
+    },
+    {
+      "name": "ed-mode-1",
+      "terminal": { "columns": 5, "rows": 3 },
+      "chunks": [
+        { "bytes": [97, 98, 99, 100, 101] },
+        { "bytes": [13, 10] },
+        { "bytes": [102, 103, 104, 105, 106] },
+        { "bytes": [13, 10] },
+        { "bytes": [107, 108, 109, 110, 111] },
+        { "bytes": [27, 91, 50, 59, 51, 72] },
+        { "bytes": [27, 91, 49, 74] }
+      ],
+      "expected": {
+        "cursor": { "row": 1, "column": 2, "visible": true },
+        "viewport_lines": ["     ", "   ij", "klmno"],
+        "scrollback_lines": [],
+        "events": [{ "kind": "csi", "diagnostic_contains": "CSI 1J" }]
+      }
+    },
+    {
+      "name": "ed-mode-2",
+      "terminal": { "columns": 5, "rows": 3 },
+      "chunks": [
+        { "bytes": [97, 98, 99, 100, 101] },
+        { "bytes": [13, 10] },
+        { "bytes": [102, 103, 104, 105, 106] },
+        { "bytes": [13, 10] },
+        { "bytes": [107, 108, 109, 110, 111] },
+        { "bytes": [27, 91, 50, 74] }
+      ],
+      "expected": {
+        "cursor": { "row": 2, "column": 4, "visible": true },
+        "viewport_lines": ["     ", "     ", "     "],
+        "scrollback_lines": [],
+        "events": [{ "kind": "csi", "diagnostic_contains": "CSI 2J" }]
+      }
+    },
+    {
+      "name": "el-mode-0",
+      "terminal": { "columns": 6, "rows": 2 },
+      "chunks": [
+        { "bytes": [97, 98, 99, 100, 101, 102] },
+        { "bytes": [13, 10] },
+        { "bytes": [117, 118, 119, 120, 121, 122] },
+        { "bytes": [27, 91, 49, 59, 51, 72] },
+        { "bytes": [27, 91, 75] }
+      ],
+      "expected": {
+        "cursor": { "row": 0, "column": 2, "visible": true },
+        "viewport_lines": ["ab    ", "uvwxyz"],
+        "events": [{ "kind": "csi", "diagnostic_contains": "CSI 0K" }]
+      }
+    },
+    {
+      "name": "el-mode-1",
+      "terminal": { "columns": 6, "rows": 1 },
+      "chunks": [
+        { "bytes": [97, 98, 99, 100, 101, 102] },
+        { "bytes": [27, 91, 49, 59, 51, 72] },
+        { "bytes": [27, 91, 49, 75] }
+      ],
+      "expected": {
+        "cursor": { "row": 0, "column": 2, "visible": true },
+        "viewport_lines": ["   def"],
+        "events": [{ "kind": "csi", "diagnostic_contains": "CSI 1K" }]
+      }
+    },
+    {
+      "name": "el-mode-2",
+      "terminal": { "columns": 6, "rows": 1 },
+      "chunks": [
+        { "bytes": [97, 98, 99, 100, 101, 102] },
+        { "bytes": [27, 91, 49, 59, 51, 72] },
+        { "bytes": [27, 91, 50, 75] }
+      ],
+      "expected": {
+        "cursor": { "row": 0, "column": 2, "visible": true },
+        "viewport_lines": ["      "],
+        "events": [{ "kind": "csi", "diagnostic_contains": "CSI 2K" }]
+      }
+    },
+    {
+      "name": "ech-clears-without-shift",
+      "terminal": { "columns": 6, "rows": 1 },
+      "chunks": [
+        { "bytes": [97, 98, 99, 100, 101, 102] },
+        { "bytes": [27, 91, 49, 59, 51, 72] },
+        { "bytes": [27, 91, 50, 88] }
+      ],
+      "expected": {
+        "cursor": { "row": 0, "column": 2, "visible": true },
+        "viewport_lines": ["ab  ef"],
+        "events": [{ "kind": "csi", "diagnostic_contains": "CSI 2X" }]
+      }
+    },
+    {
+      "name": "unsupported-erasure-parameter-preserves-state",
+      "terminal": { "columns": 5, "rows": 1 },
+      "chunks": [
+        { "bytes": [97, 98, 99] },
+        { "bytes": [27, 91, 57, 57, 74] }
+      ],
+      "expected": {
+        "cursor": { "row": 0, "column": 3, "visible": true },
+        "viewport_lines": ["abc  "],
+        "events": [
+          { "kind": "unsupported", "diagnostic_contains": "unsupported ED mode 99" }
+        ]
+      }
+    },
+    {
+      "name": "dec-private-47-switches-screen",
+      "terminal": { "columns": 3, "rows": 2 },
+      "chunks": [
+        { "bytes": [112] },
+        { "bytes": [13, 10] },
+        { "bytes": [113] },
+        { "bytes": [27, 91, 63, 52, 55, 104] },
+        { "bytes": [97] },
+        { "bytes": [27, 91, 63, 52, 55, 108] }
+      ],
+      "checkpoints": [
+        {
+          "after_chunk": 5,
+          "expected": {
+            "active_screen": "alternate",
+            "cursor": { "row": 0, "column": 1, "visible": true },
+            "viewport_lines": ["a  ", "   "],
+            "scrollback_lines": []
+          }
+        }
+      ],
+      "expected": {
+        "active_screen": "primary",
+        "cursor": { "row": 1, "column": 1, "visible": true },
+        "viewport_lines": ["p  ", "q  "],
+        "events": [
+          { "kind": "csi", "diagnostic_contains": "?47h" },
+          { "kind": "csi", "diagnostic_contains": "?47l" }
+        ]
+      }
+    },
+    {
+      "name": "dec-private-1047-clears-alternate-on-reset",
+      "terminal": { "columns": 3, "rows": 2 },
+      "chunks": [
+        { "bytes": [112] },
+        { "bytes": [13, 10] },
+        { "bytes": [113] },
+        { "bytes": [27, 91, 63, 49, 48, 52, 55, 104] },
+        { "bytes": [97] },
+        { "bytes": [27, 91, 63, 49, 48, 52, 55, 108] },
+        { "bytes": [27, 91, 63, 49, 48, 52, 55, 104] }
+      ],
+      "checkpoints": [
+        {
+          "after_chunk": 6,
+          "expected": {
+            "active_screen": "primary",
+            "cursor": { "row": 1, "column": 1, "visible": true },
+            "viewport_lines": ["p  ", "q  "]
+          }
+        }
+      ],
+      "expected": {
+        "active_screen": "alternate",
+        "cursor": { "row": 0, "column": 0, "visible": true },
+        "viewport_lines": ["   ", "   "],
+        "scrollback_lines": [],
+        "events": [
+          { "kind": "csi", "diagnostic_contains": "?1047h" },
+          { "kind": "csi", "diagnostic_contains": "?1047l" }
+        ]
+      }
+    },
+    {
+      "name": "dec-private-1048-save-restore-cursor",
+      "terminal": { "columns": 5, "rows": 2 },
+      "chunks": [
+        { "bytes": [97, 98] },
+        { "bytes": [27, 91, 63, 49, 48, 52, 56, 104] },
+        { "bytes": [27, 91, 50, 59, 53, 72] },
+        { "bytes": [99] },
+        { "bytes": [27, 91, 63, 49, 48, 52, 56, 108] },
+        { "bytes": [90] }
+      ],
+      "expected": {
+        "active_screen": "primary",
+        "cursor": { "row": 0, "column": 3, "visible": true },
+        "viewport_lines": ["abZ  ", "    c"],
+        "events": [
+          { "kind": "csi", "diagnostic_contains": "?1048h" },
+          { "kind": "csi", "diagnostic_contains": "?1048l" }
+        ]
+      }
+    },
+    {
+      "name": "dec-private-1049-restores-primary-cursor",
+      "terminal": { "columns": 5, "rows": 2 },
+      "chunks": [
+        { "bytes": [97, 98] },
+        { "bytes": [27, 91, 63, 49, 48, 52, 57, 104] },
+        { "bytes": [120, 121] },
+        { "bytes": [27, 91, 63, 49, 48, 52, 57, 108] },
+        { "bytes": [90] }
+      ],
+      "expected": {
+        "active_screen": "primary",
+        "cursor": { "row": 0, "column": 3, "visible": true },
+        "viewport_lines": ["abZ  ", "     "],
+        "events": [
+          { "kind": "csi", "diagnostic_contains": "?1049h" },
+          { "kind": "csi", "diagnostic_contains": "?1049l" }
+        ]
+      }
+    }
+  ]
+}

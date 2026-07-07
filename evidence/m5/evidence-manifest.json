@@ -1,0 +1,340 @@
+{
+  "schema": "hera.m5_evidence_manifest",
+  "version": 1,
+  "generated_at": "2026-07-07T19:26:30Z",
+  "hera_commit": "43be06d",
+  "redaction": {
+    "version": 1,
+    "updated_at": "2026-07-04T13:28:23Z",
+    "reject_patterns": [
+      "C:\\Users\\",
+      "C:/Users/",
+      "\\Users\\",
+      "%USERPROFILE%",
+      "/home/",
+      "OPENAI_API_KEY",
+      "ANTHROPIC_API_KEY",
+      "BEGIN OPENSSH PRIVATE KEY",
+      "BEGIN RSA PRIVATE KEY"
+    ],
+    "public_privacy_classes": [
+      "public_summary",
+      "scrubbed_public"
+    ]
+  },
+  "artifacts": [
+    {
+      "id": "m5_baseline",
+      "type": "baseline",
+      "path": "evidence/m5/m5-baseline.json",
+      "source_command": "cargo run -p terminal-cli -- generate-m5-baseline --output evidence/m5/m5-baseline.json",
+      "generated_at": "2026-07-04T15:57:27Z",
+      "redaction_checked_at": "2026-07-04T15:57:27Z",
+      "privacy": "public_summary",
+      "platform": "all",
+      "reproducibility_status": "reproducible",
+      "owner": "terminal-fixtures",
+      "notes": [
+        "Carries M4 partial-proof blockers into a machine-readable M5 baseline while keeping M5 status READY."
+      ]
+    },
+    {
+      "id": "m5_go_no_go_policy",
+      "type": "go_no_go_policy",
+      "path": "evidence/m5/m5-go-no-go-thresholds.json",
+      "source_command": "manual: define EP-001 M6 decision thresholds, validated by terminal-cli validate-m5-go-no-go",
+      "generated_at": "2026-07-04T13:28:23Z",
+      "redaction_checked_at": "2026-07-04T13:28:23Z",
+      "privacy": "public_summary",
+      "platform": "all",
+      "reproducibility_status": "non_reproducible",
+      "owner": "terminal-fixtures",
+      "non_reproducible_reason": "Maintainer-authored decision policy; validator enforces schema, required outcomes and measurable criteria.",
+      "notes": [
+        "Names host replacement experiment, public pre-release packaging and another compatibility hardening milestone."
+      ]
+    },
+    {
+      "id": "m5_baseline_and_evidence_policy_doc",
+      "type": "evidence_policy_doc",
+      "path": "docs/m5-baseline-and-evidence-policy.md",
+      "source_command": "manual: render EP-001 baseline, evidence manifest contract and go/no-go thresholds",
+      "generated_at": "2026-07-04T15:20:00Z",
+      "redaction_checked_at": "2026-07-04T15:20:00Z",
+      "privacy": "public_summary",
+      "platform": "all",
+      "reproducibility_status": "non_reproducible",
+      "owner": "terminal-fixtures",
+      "non_reproducible_reason": "Reader-facing policy document derived from machine-readable M5 JSON artifacts.",
+      "notes": [
+        "Documents missing-source behavior and public artifact privacy rules."
+      ]
+    },
+    {
+      "id": "m5_compatibility_matrix",
+      "type": "compatibility_matrix",
+      "path": "evidence/m5/compatibility-matrix.json",
+      "source_command": "manual: author EP-002 compatibility matrix, validated by cargo run -p terminal-cli -- validate-m5-compatibility evidence/m5/compatibility-matrix.json",
+      "generated_at": "2026-07-04T14:15:00Z",
+      "redaction_checked_at": "2026-07-04T14:15:00Z",
+      "privacy": "public_summary",
+      "platform": "all",
+      "reproducibility_status": "non_reproducible",
+      "owner": "terminal-fixtures",
+      "non_reproducible_reason": "Maintainer-authored compatibility matrix; validator enforces schema, fixture links and source references.",
+      "notes": [
+        "Contains 18 pass rows and one out-of-scope row for M5 EP-002."
+      ]
+    },
+    {
+      "id": "m5_compatibility_matrix_doc",
+      "type": "compatibility_matrix_doc",
+      "path": "docs/m5-compatibility-matrix.md",
+      "source_command": "manual: render M5 compatibility summary from evidence/m5/compatibility-matrix.json",
+      "generated_at": "2026-07-04T14:15:00Z",
+      "redaction_checked_at": "2026-07-04T14:15:00Z",
+      "privacy": "public_summary",
+      "platform": "all",
+      "reproducibility_status": "non_reproducible",
+      "owner": "terminal-fixtures",
+      "non_reproducible_reason": "Reader-facing document derived from the validated M5 compatibility matrix.",
+      "notes": [
+        "Documents pass percentage, deferred-row policy and EP-002 fixture-backed rows."
+      ]
+    },
+    {
+      "id": "m5_replay_codex_derivative",
+      "type": "replay_fixture",
+      "path": "crates/terminal-fixtures/fixtures/m5-replay/codex-session.json",
+      "source_command": "cargo run -p terminal-cli -- generate-m5-replay-derivatives --output-dir crates/terminal-fixtures/fixtures/m5-replay",
+      "generated_at": "2026-07-04T14:51:30Z",
+      "redaction_checked_at": "2026-07-04T14:51:30Z",
+      "privacy": "scrubbed_public",
+      "platform": "cross_platform",
+      "reproducibility_status": "reproducible",
+      "owner": "terminal-fixtures",
+      "notes": [
+        "Scrubbed Codex CLI derivative with command shape preserved and raw prompts, local paths and tokens omitted."
+      ]
+    },
+    {
+      "id": "m5_replay_claude_code_derivative",
+      "type": "replay_fixture",
+      "path": "crates/terminal-fixtures/fixtures/m5-replay/claude-code-session.json",
+      "source_command": "cargo run -p terminal-cli -- generate-m5-replay-derivatives --output-dir crates/terminal-fixtures/fixtures/m5-replay",
+      "generated_at": "2026-07-04T14:51:30Z",
+      "redaction_checked_at": "2026-07-04T14:51:30Z",
+      "privacy": "scrubbed_public",
+      "platform": "cross_platform",
+      "reproducibility_status": "reproducible",
+      "owner": "terminal-fixtures",
+      "notes": [
+        "Scrubbed Claude Code derivative with command shape preserved and raw prompts, local paths and tokens omitted."
+      ]
+    },
+    {
+      "id": "m5_replay_rapid_output",
+      "type": "replay_fixture",
+      "path": "crates/terminal-fixtures/fixtures/m5-replay/rapid-output.json",
+      "source_command": "cargo run -p terminal-cli -- generate-m5-replay-derivatives --output-dir crates/terminal-fixtures/fixtures/m5-replay",
+      "generated_at": "2026-07-04T14:51:30Z",
+      "redaction_checked_at": "2026-07-04T14:51:30Z",
+      "privacy": "scrubbed_public",
+      "platform": "cross_platform",
+      "reproducibility_status": "reproducible",
+      "owner": "terminal-fixtures",
+      "notes": [
+        "Synthetic public rapid-output workload used by M5 replay verification."
+      ]
+    },
+    {
+      "id": "m5_replay_long_session_100k",
+      "type": "replay_fixture",
+      "path": "crates/terminal-fixtures/fixtures/m5-replay/long-session-100k.json",
+      "source_command": "cargo run -p terminal-cli -- generate-m5-replay-derivatives --output-dir crates/terminal-fixtures/fixtures/m5-replay",
+      "generated_at": "2026-07-04T14:51:30Z",
+      "redaction_checked_at": "2026-07-04T14:51:30Z",
+      "privacy": "scrubbed_public",
+      "platform": "cross_platform",
+      "reproducibility_status": "reproducible",
+      "owner": "terminal-fixtures",
+      "notes": [
+        "Synthetic public 100k-line workload records discarded rows and Hera-owned scrollback bytes."
+      ]
+    },
+    {
+      "id": "m5_replay_verification",
+      "type": "replay_verification",
+      "path": "evidence/m5/m5-replay-verification.json",
+      "source_command": "cargo run -p terminal-cli -- verify-m5-replay crates/terminal-fixtures/fixtures/m5-replay --json-output evidence/m5/m5-replay-verification.json",
+      "generated_at": "2026-07-04T15:19:53Z",
+      "redaction_checked_at": "2026-07-04T15:19:53Z",
+      "privacy": "public_summary",
+      "platform": "cross_platform",
+      "reproducibility_status": "reproducible",
+      "owner": "terminal-fixtures",
+      "notes": [
+        "Verifies four M5 replay fixtures twice, including Codex, Claude Code, rapid-output and 100k-line scenarios."
+      ]
+    },
+    {
+      "id": "m5_paneflow_shadow_dogfood",
+      "type": "dogfood_report",
+      "path": "evidence/m5/paneflow-shadow-dogfood.json",
+      "source_command": "manual: PANEFLOW_HERA_DOGFOOD=shadow PANEFLOW_HERA_DOGFOOD_RETENTION=raw_local PANEFLOW_IPC_SCRIPTING=1 target/debug/paneflow.exe; workspace.up two scripted panes; summarize live mismatch reports",
+      "generated_at": "2026-07-07T19:26:30Z",
+      "redaction_checked_at": "2026-07-07T19:26:30Z",
+      "privacy": "public_summary",
+      "platform": "windows",
+      "reproducibility_status": "non_reproducible",
+      "owner": "terminal-fixtures",
+      "non_reproducible_reason": "Requires a live Paneflow GPUI session with feature-gated Hera dogfood enabled; raw local mismatch artifacts are intentionally retained outside Hera.",
+      "notes": [
+        "Records the failed 2026-07-07 live Paneflow shadow rerun and links only scrubbed public mismatch summaries."
+      ]
+    },
+    {
+      "id": "m5_paneflow_shadow_dogfood_live_summary",
+      "type": "dogfood_live_summary",
+      "path": "evidence/m5/dogfood/live-gpui-summary-2026-07-07.json",
+      "source_command": "manual: summarize scrubbed fields from the 2026-07-07 isolated live Paneflow shadow dogfood rerun",
+      "generated_at": "2026-07-07T19:26:30Z",
+      "redaction_checked_at": "2026-07-07T19:26:30Z",
+      "privacy": "public_summary",
+      "platform": "windows",
+      "reproducibility_status": "non_reproducible",
+      "owner": "terminal-fixtures",
+      "non_reproducible_reason": "Summarizes local-only live GPUI mismatch JSON that must stay outside the Hera repository.",
+      "feature_flags": [
+        "hera-dogfood"
+      ],
+      "notes": [
+        "Contains only field paths, counts, dimensions and sanitized mismatch categories from the isolated live rerun."
+      ]
+    },
+    {
+      "id": "m5_platform_runtime_evidence",
+      "type": "platform_runtime_evidence",
+      "path": "evidence/m5/platform-runtime-evidence.json",
+      "source_command": "cargo run -p terminal-cli -- measure-m5-platform --json-output evidence/m5/platform-runtime-evidence.json",
+      "generated_at": "2026-07-04T15:19:38Z",
+      "redaction_checked_at": "2026-07-04T15:19:38Z",
+      "privacy": "public_summary",
+      "platform": "all",
+      "reproducibility_status": "reproducible",
+      "owner": "terminal-fixtures",
+      "notes": [
+        "Records the EP-004 required command set for Windows, Linux and macOS, with non-current platforms blocked instead of inferred."
+      ]
+    },
+    {
+      "id": "m5_platform_runtime_evidence_doc",
+      "type": "platform_runtime_evidence_doc",
+      "path": "docs/m5-platform-runtime-evidence.md",
+      "source_command": "manual: render EP-004 platform runner command set and validation policy",
+      "generated_at": "2026-07-04T15:20:00Z",
+      "redaction_checked_at": "2026-07-04T15:20:00Z",
+      "privacy": "public_summary",
+      "platform": "all",
+      "reproducibility_status": "non_reproducible",
+      "owner": "terminal-fixtures",
+      "non_reproducible_reason": "Reader-facing document derived from the platform evidence schema and checked-in artifact.",
+      "notes": [
+        "Documents that Linux and macOS remain blocked until measured directly."
+      ]
+    },
+    {
+      "id": "m5_package_readiness",
+      "type": "package_readiness",
+      "path": "evidence/m5/m5-package-readiness.json",
+      "source_command": "cargo run -p terminal-cli -- generate-m5-package-readiness --output evidence/m5/m5-package-readiness.json --release-plan-output evidence/m5/m5-release-plan.json",
+      "generated_at": "2026-07-04T15:41:36Z",
+      "redaction_checked_at": "2026-07-04T15:41:36Z",
+      "privacy": "public_summary",
+      "platform": "all",
+      "reproducibility_status": "reproducible",
+      "owner": "terminal-cli",
+      "notes": [
+        "Records manifest metadata, docs.rs policy and package dry-run results for all intended public Hera crates."
+      ]
+    },
+    {
+      "id": "m5_release_plan",
+      "type": "release_plan",
+      "path": "evidence/m5/m5-release-plan.json",
+      "source_command": "cargo run -p terminal-cli -- generate-m5-package-readiness --output evidence/m5/m5-package-readiness.json --release-plan-output evidence/m5/m5-release-plan.json",
+      "generated_at": "2026-07-04T15:41:36Z",
+      "redaction_checked_at": "2026-07-04T15:41:36Z",
+      "privacy": "public_summary",
+      "platform": "all",
+      "reproducibility_status": "reproducible",
+      "owner": "terminal-cli",
+      "notes": [
+        "Orders public crate dry-runs so dependencies appear before dependents and keeps cargo publish out of scope."
+      ]
+    },
+    {
+      "id": "m5_api_audit",
+      "type": "api_audit",
+      "path": "evidence/m5/m5-api-audit.json",
+      "source_command": "cargo run -p terminal-cli -- generate-m5-api-audit --output evidence/m5/m5-api-audit.json",
+      "generated_at": "2026-07-04T15:41:40Z",
+      "redaction_checked_at": "2026-07-04T15:41:40Z",
+      "privacy": "public_summary",
+      "platform": "all",
+      "reproducibility_status": "reproducible",
+      "owner": "terminal-cli",
+      "notes": [
+        "Records public API boundary checks and blocked cargo-semver-checks coverage for EP-005."
+      ]
+    },
+    {
+      "id": "m5_security_baseline",
+      "type": "security_baseline",
+      "path": "evidence/m5/m5-security-baseline.json",
+      "source_command": "cargo run -p terminal-cli -- generate-m5-security-baseline --output evidence/m5/m5-security-baseline.json",
+      "generated_at": "2026-07-04T16:04:02Z",
+      "redaction_checked_at": "2026-07-04T16:04:02Z",
+      "privacy": "public_summary",
+      "platform": "all",
+      "reproducibility_status": "reproducible",
+      "owner": "terminal-cli",
+      "notes": [
+        "Records cargo-audit, cargo-deny and OpenSSF Scorecard posture for EP-006.",
+        "Current local run blocks release hardening because cargo-audit and Scorecard are unavailable and cargo-deny fails without an explicit license policy."
+      ]
+    },
+    {
+      "id": "m5_release_and_api_hardening_doc",
+      "type": "release_api_doc",
+      "path": "docs/m5-release-and-api-hardening.md",
+      "source_command": "manual: render EP-005 package readiness, release plan and API audit evidence",
+      "generated_at": "2026-07-04T15:35:00Z",
+      "redaction_checked_at": "2026-07-04T15:35:00Z",
+      "privacy": "public_summary",
+      "platform": "all",
+      "reproducibility_status": "non_reproducible",
+      "owner": "terminal-cli",
+      "non_reproducible_reason": "Reader-facing document derived from validated EP-005 JSON artifacts.",
+      "notes": [
+        "Explains why public pre-release packaging remains blocked while metadata, docs.rs policy and API boundaries now have evidence."
+      ]
+    },
+    {
+      "id": "m5_initial_report",
+      "type": "final_report",
+      "path": "docs/m5-compatibility-release-hardening-report.md",
+      "source_command": "manual: update M5 final report from baseline, compatibility, replay, dogfood, platform, package, API and security artifacts",
+      "generated_at": "2026-07-04T15:58:00Z",
+      "redaction_checked_at": "2026-07-04T15:58:00Z",
+      "privacy": "public_summary",
+      "platform": "all",
+      "reproducibility_status": "non_reproducible",
+      "owner": "terminal-fixtures",
+      "non_reproducible_reason": "Report is authored from validated M5 evidence artifacts and records the final EP-006 recommendation.",
+      "notes": [
+        "Captures the final M5 verdict: host replacement and public pre-release packaging remain blocked; another compatibility and release hardening milestone is recommended."
+      ]
+    }
+  ]
+}

@@ -278,17 +278,30 @@ bornee, exemples API et discipline de redaction sont solides; compatibilite VT,
 mesures Linux/macOS, packaging public, Scorecard et dogfood longue session
 restent des gaps explicites.
 
-### M5: Compatibility And Release Hardening (RECOMMENDED)
+### M5: Compatibility And Release Hardening (FINAL REPORT RECORDED)
 
-Le prochain chantier recommande est de durcir la compatibilite et la readiness
-avant toute experience de remplacement Paneflow:
+M5 a transforme la preuve publique partielle de M4 en package d'evidence plus
+large: matrice de compatibilite M5, replays scrubbed Codex et Claude Code,
+scenario dogfood public-safe, evidence Windows, metadata/docs.rs, ordre de
+publication, audit API et baseline securite.
 
-- etendre les fixtures CSI, ED/EL/ECH et DEC private modes
-- ajouter des mesures Linux et macOS reelles
-- produire des replays scrubbed issus de vraies sessions Codex et Claude Code
-- completer metadata, noms de crates et ordre de publication
-- lancer un baseline OpenSSF Scorecard quand le repo public le permet
-- refaire un dogfood Paneflow shadow plus long avec sortie rapide
+Le rapport final est `docs/m5-compatibility-release-hardening-report.md`. Son
+verdict bloque encore le remplacement Paneflow et le pre-release packaging
+public: le dogfood Paneflow live est mesure et echoue avec des mismatches P0,
+Linux/macOS restent bloques, les crates dependantes ne packagent pas tant que
+les crates Hera amont ne sont
+pas disponibles, `cargo-semver-checks` manque et la baseline securite echoue
+sur cargo-deny faute de policy explicite.
+
+Le prochain chantier recommande reste donc du hardening cible, pas un renderer
+ou une app terminal:
+
+- corriger les mismatches P0 du dogfood Paneflow shadow puis produire une
+  synthese scrubbed zero-P0
+- mesurer Linux et macOS via runners locaux ou CI
+- ajouter une policy cargo-deny, mesurer cargo-audit et OpenSSF Scorecard
+- decider la strategie de staging/package pour crates Hera non publiees
+- executer un baseline semver avant toute promesse publique stable
 
 ## Questions Dures
 
@@ -316,6 +329,7 @@ Avant publication publique, verifier au minimum:
 ## Intention Du Dossier
 
 Ce dossier commence comme brief projet et hub de recherche. Il est maintenant
-le workspace Rust Hera, avec M4 public proof livre. La suite naturelle est M5:
-compatibilite, release readiness et dogfood public-safe plus large avant
-renderer, app terminal complete ou remplacement du chemin terminal Paneflow.
+le workspace Rust Hera, avec M5 final report enregistre. La suite naturelle est
+un M6 de hardening cible: dogfood live scrubbed zero-P0, Linux/macOS, security
+policy, semver baseline et staging package avant renderer, app terminal complete ou
+remplacement du chemin terminal Paneflow.

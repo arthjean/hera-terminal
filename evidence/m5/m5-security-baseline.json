@@ -1,0 +1,109 @@
+{
+  "schema": "hera.m5_security_baseline",
+  "version": 1,
+  "generated_at": "2026-07-04T16:04:02Z",
+  "source_command": "terminal-cli generate-m5-security-baseline --output evidence/m5/m5-security-baseline.json",
+  "status": "failed",
+  "tools": [
+    {
+      "id": "cargo_audit",
+      "tool_name": "cargo-audit",
+      "install_status": "unavailable",
+      "attempted_command": "cargo audit --json",
+      "status": "blocked",
+      "exit_code": null,
+      "duration_ms": null,
+      "stdout_summary": "",
+      "stderr_summary": "error: no such command: `audit`\nhelp: a command with a similar name exists: `add`\nhelp: view all installed commands with `cargo --list`\nhelp: find a package to install `audit` with `cargo search cargo-audit`",
+      "blocked_reason": "cargo-audit is not installed or not available as a command",
+      "coverage": [
+        {
+          "category": "advisories",
+          "status": "blocked",
+          "summary": "Tool unavailable in this local M5 session."
+        }
+      ],
+      "findings": [],
+      "release_blocking": false
+    },
+    {
+      "id": "cargo_deny",
+      "tool_name": "cargo-deny",
+      "install_status": "available",
+      "attempted_command": "cargo deny check advisories licenses bans sources",
+      "status": "failed",
+      "exit_code": 4,
+      "duration_ms": 787,
+      "stdout_summary": "advisories ok, bans ok, licenses FAILED, sources ok",
+      "stderr_summary": "2026-07-04 16:04:02 [WARN] unable to find a config path, falling back to default config\nerror[rejected]: failed to satisfy license requirements\n.. $HOME/.cargo/registry/src\\index.crates.io-1949cf8c6b5b557f\\anyhow-1.0.103\\Cargo.toml:35:12\n.\n35 . license = \"MIT OR Apache-2.0\"\n.            .................\n.            .      .\n.            .      rejected: license is not explicitly allowed\n.            rejected: license is not explicitly allowed\n.\n. MIT - MIT License:\n.   - OSI approved\n.   - FSF Free/Libre\n. Apache-2.0 - Apache License 2.0:\n.   - OSI approved\n.   - FSF Free/Libre\n. anyhow v1.0.103\n... portable-pty v0.9.0\n.   ... terminal-pty v0.1.0\n.       ... terminal-cli v0.1.0\n... (dev) terminal-pty v0.1.0 (*)\nerror[rejected]: failed to satisfy license requirements\n.. $HOME/.cargo/registry/src\\index.crates.io-1949cf8c6b5b557f\\arrayvec-0.7.8\\Cargo.toml:38:12\n.\n38 . license = \"MIT OR Apache-2.0\"\n.            .................\n.            .      .\n.            .      rejected: license is not explicitly allowed\n.            rejected: license is not explicitly allowed\n.\n. MIT - MIT License:\n.   - OSI approved\n.   - FSF Free/Libre\n. Apache-2.0 - Apache License 2.0:\n. ...",
+      "blocked_reason": null,
+      "coverage": [
+        {
+          "category": "advisories",
+          "status": "pass",
+          "summary": "Tool reported this category as ok before the non-zero exit."
+        },
+        {
+          "category": "licenses",
+          "status": "failed",
+          "summary": "Tool reported this category as failed or did not provide per-category status."
+        },
+        {
+          "category": "bans",
+          "status": "pass",
+          "summary": "Tool reported this category as ok before the non-zero exit."
+        },
+        {
+          "category": "duplicate_versions",
+          "status": "pass",
+          "summary": "Tool reported this category as ok before the non-zero exit."
+        },
+        {
+          "category": "sources",
+          "status": "pass",
+          "summary": "Tool reported this category as ok before the non-zero exit."
+        }
+      ],
+      "findings": [
+        {
+          "id": "cargo_deny.failed",
+          "severity": "unknown",
+          "release_blocking": true,
+          "summary": "2026-07-04 16:04:02 [WARN] unable to find a config path, falling back to default config\nerror[rejected]: failed to satisfy license requirements\n.. $HOME/.cargo/registry/src\\index.crates.io-1949cf8c6b5b557f\\anyhow-1.0.103\\Cargo.toml:35:12\n.\n35 . license = \"MIT OR Apache-2.0\"\n.            .................\n.            .      .\n.            .      rejected: license is not explicitly allowed\n.            rejected: license is not explicitly allowed\n.\n. MIT - MIT License:\n.   - OSI approved\n.   - FSF Free/Libre\n. Apache-2.0 - Apache License 2.0:\n.   - OSI approved\n.   - FSF Free/Libre\n. anyhow v1.0.103\n... portable-pty v0.9.0\n.   ... terminal-pty v0.1.0\n.       ... terminal-cli v0.1.0\n... (dev) terminal-pty v0.1.0 (*)\nerror[rejected]: failed to satisfy license requirements\n.. $HOME/.cargo/registry/src\\index.crates.io-1949cf8c6b5b557f\\arrayvec-0.7.8\\Cargo.toml:38:12\n.\n38 . license = \"MIT OR Apache-2.0\"\n.            .................\n.            .      .\n.            .      rejected: license is not explicitly allowed\n.            rejected: license is not explicitly allowed\n.\n. MIT - MIT License:\n.   - OSI approved\n.   - FSF Free/Libre\n. Apache-2.0 - Apache License 2.0:\n. ..."
+        }
+      ],
+      "release_blocking": true
+    },
+    {
+      "id": "open_ssf_scorecard",
+      "tool_name": "openssf-scorecard",
+      "install_status": "unavailable",
+      "attempted_command": "scorecard --repo=github.com/arthjean/hera-terminal --format=json",
+      "status": "blocked",
+      "exit_code": null,
+      "duration_ms": null,
+      "stdout_summary": "",
+      "stderr_summary": "program not found",
+      "blocked_reason": "openssf-scorecard version probe could not be executed",
+      "coverage": [
+        {
+          "category": "scorecard_checks",
+          "status": "blocked",
+          "summary": "Tool unavailable in this local M5 session."
+        }
+      ],
+      "findings": [],
+      "release_blocking": false
+    }
+  ],
+  "summary": {
+    "passed_tools": 0,
+    "blocked_tools": 2,
+    "failed_tools": 1,
+    "release_blocking_findings": 1
+  },
+  "notes": [
+    "M5 records local supply-chain tooling posture without installing tools or treating Scorecard score alone as release approval.",
+    "Unavailable tools keep release hardening blocked until they are installed or represented by CI evidence."
+  ]
+}
