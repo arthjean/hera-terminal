@@ -1,88 +1,91 @@
 # Hera
 
-Hera est un moteur de terminal headless en Rust. Il transforme un flux de bytes
-VT en etat terminal deterministe, snapshots renderer-neutral, scrollback borne
-et replays exploitables par une GUI, une TUI, des tests ou un host distant.
+[Version francaise](docs/README_FR.md)
 
-Le projet vise les longues sessions CLI et agentiques sans lier la correction
-du terminal a un renderer, un runtime PTY ou une application particuliere.
-Paneflow est son premier terrain de dogfood.
+Hera is a headless terminal engine written in Rust. It turns a VT byte stream
+into deterministic terminal state, renderer-neutral snapshots, bounded
+scrollback, and replays that a GUI, TUI, test harness, or remote host can use.
 
-## Etat Actuel
+The project targets long-running CLI and agent sessions without tying terminal
+correctness to a renderer, PTY runtime, or specific application. Paneflow is its
+first dogfood environment.
 
-Hera est un workspace Rust 2024 de six crates. M1 a M5 sont termines. Le travail
-M6 en cours porte sur une experience controlee d'autorite de rendu dans
-Paneflow, pour des panes explicitement selectionnees. Il ne remplace ni le PTY,
-ni l'input, ni le chemin terminal par defaut.
+## Current Status
 
-| Milestone | Statut | Preuve principale |
+Hera is a six-crate Rust 2024 workspace. M1 through M5 are complete. The current
+M6 work is a controlled rendering-authority experiment in Paneflow for
+explicitly selected panes. It does not replace the PTY, input handling, or the
+default terminal path.
+
+| Milestone | Status | Primary evidence |
 |---|---|---|
-| M0: research map | DONE | Decisions et inventaires d'engines de reference |
-| M1: headless core | DONE | Ingestion VT, ecrans, scrollback, resize, snapshots et fixtures |
-| M2: PTY runtime | DONE | Commandes directes ou shell, resize, IO, lifecycle et recordings |
-| M3: Paneflow shadow dogfood | DONE | Integration side-by-side sans changer le rendu autoritatif |
-| M4: public proof | DONE | Replays, benchmarks, profils memoire, exemples API et evidence package |
-| M5: compatibility and release hardening | DONE | 18 lignes de compatibilite en pass et dogfood Windows cible en pass |
-| M6: controlled host replacement | IN PROGRESS | Baseline et activation terminees, render authority en cours |
+| M0: research map | DONE | Architecture decisions and reference engine inventories |
+| M1: headless core | DONE | VT ingestion, screens, scrollback, resize, snapshots, and fixtures |
+| M2: PTY runtime | DONE | Direct and shell commands, resize, IO, lifecycle, and recordings |
+| M3: Paneflow shadow dogfood | DONE | Side-by-side integration without changing the authoritative renderer |
+| M4: public proof | DONE | Replays, benchmarks, memory profiles, API examples, and evidence package |
+| M5: compatibility and release hardening | DONE | 18 passing compatibility rows and a targeted Windows dogfood pass |
+| M6: controlled host replacement | IN PROGRESS | Baseline and activation complete, rendering-authority work underway |
 
-Le dernier run M5 verifie a execute deux panes Paneflow pendant 45 minutes en
-shadow mode et n'a produit aucun rapport de mismatch. Cette preuve debloque une
-experience de rendu autoritatif limitee. Elle ne prouve pas encore un
-remplacement cross-platform ou une release publique.
+The latest verified M5 run exercised two Paneflow panes for 45 minutes in
+shadow mode and produced no mismatch reports. That result unlocks a limited
+rendering-authority experiment. It does not yet prove cross-platform replacement
+or public release readiness.
 
-La direction M6 a ete decidee apres le rapport final M5. Ce rapport reste la
-cloture historique du milestone; le research map et le PRD M6 portent la
-decision courante.
+The M6 direction was selected after the final M5 report. That report remains the
+historical closeout for the milestone; the research map and M6 PRD carry the
+current decision.
 
-Limites encore ouvertes:
+Open limitations:
 
-- Linux et macOS ne disposent pas encore des mesures runtime M5 equivalentes.
-- Les dry-runs des crates dependantes restent bloques par les crates Hera non
-  publiees ou par l'absence d'une strategie de staging.
-- La baseline semver et une partie de la posture supply-chain restent a fermer.
-- Hera n'est ni une application terminal desktop, ni un renderer GPU, ni le
-  moteur par defaut de Paneflow.
+- Linux and macOS do not yet have runtime measurements equivalent to M5 on
+  Windows.
+- Dry runs for dependent crates remain blocked by unpublished Hera crates or
+  the lack of an accepted staging strategy.
+- The semver baseline and part of the supply-chain posture remain incomplete.
+- Hera is not a desktop terminal application, a GPU renderer, or Paneflow's
+  default terminal engine.
 
-## Capacites Implementees
+## Implemented Capabilities
 
-`terminal-core` wrappe `alacritty/vte` derriere des types Hera. Le parser
-tokenise le flux, Hera possede les semantiques et l'etat observable.
+`terminal-core` wraps `alacritty/vte` behind Hera-owned types. The parser
+tokenizes the stream; Hera owns the semantics and observable state.
 
-Le coeur couvre aujourd'hui:
+The core currently covers:
 
-- ingestion incrementale de bytes et actions VT structurees
-- ecrans primary et alternate, curseur, tabs et modes
-- controles C0, CUP/HVP, ED/EL/ECH et attributs SGR
-- modes DEC 47, 1047, 1048 et 1049
-- scrollback borne par lignes et bytes avec row handles stables
-- resize et reflow predictibles sans pollution du primary scrollback
-- snapshots de viewport, cellules, styles, curseur, damage et scrollback
-- bracketed paste expose dans le modele de rendu
-- payloads inconnus ou avances preserves comme metadata sure
+- incremental byte ingestion and structured VT actions
+- primary and alternate screens, cursor, tabs, and modes
+- C0 controls, CUP/HVP, ED/EL/ECH, and SGR attributes
+- DEC modes 47, 1047, 1048, and 1049
+- scrollback bounded by line and byte limits with stable row handles
+- predictable resize and reflow without polluting primary scrollback
+- viewport, cell, style, cursor, damage, and scrollback snapshots
+- bracketed paste state exposed through the render model
+- unknown or advanced payloads preserved as safe metadata
 
-Le runtime et l'outillage ajoutent:
+The runtime and tooling add:
 
-- PTY cross-platform derriere une frontiere Hera-owned
-- execution directe en argv ou shell explicite
-- resize, input/output, exit, timeout, backpressure et recordings
-- golden fixtures, replay deterministe et comparaison de snapshots
-- generation et validation d'evidence machine-readable pour les milestones
+- a cross-platform PTY behind a Hera-owned boundary
+- direct argv execution or explicit shell execution
+- resize, input/output, exit, timeout, backpressure, and recordings
+- golden fixtures, deterministic replay, and snapshot comparison
+- machine-readable milestone evidence generation and validation
 
-Le support Sixel reste volontairement limite au parsing et a la metadata. Hera
-ne rend pas encore les protocoles image.
+Sixel support intentionally stops at parsing and metadata. Hera does not render
+image protocols yet.
 
-## Architecture Du Workspace
+## Workspace Architecture
 
-| Crate | Responsabilite |
+| Crate | Responsibility |
 |---|---|
-| `terminal-core` | Parser integration, etat terminal, scrollback, resize et snapshots |
-| `terminal-protocol` | Actions VT et payloads structures sans fuite des types `vte` |
-| `terminal-render-model` | Viewport, cellules, styles, damage, curseur et placeholders neutres |
-| `terminal-pty` | Process IO, resize, lifecycle et transport plateforme |
-| `terminal-fixtures` | Fixtures, replays, snapshots et schemas d'evidence |
-| `terminal-cli` | Debug local, execution PTY, replay, benchmarks et validation d'evidence |
+| `terminal-core` | Parser integration, terminal state, scrollback, resize, and snapshots |
+| `terminal-protocol` | Structured VT actions and payloads without leaking `vte` types |
+| `terminal-render-model` | Renderer-neutral viewport, cells, styles, damage, cursor, and placeholders |
+| `terminal-pty` | Process IO, resize, lifecycle, and platform transport |
+| `terminal-fixtures` | Fixtures, replays, snapshots, and evidence schemas |
+| `terminal-cli` | Local debugging, PTY execution, replay, benchmarks, and evidence validation |
 
-La dependance centrale reste a sens unique:
+The central dependency flow stays one-way:
 
 ```text
 bytes -> terminal-core -> RenderSnapshot -> host renderer
@@ -91,12 +94,12 @@ bytes -> terminal-core -> RenderSnapshot -> host renderer
        terminal-pty events
 ```
 
-`terminal-core` ne depend pas de PTY, GPUI, Paneflow, windowing ou API
-plateforme. `terminal-render-model` ne depend d'aucun renderer concret.
+`terminal-core` does not depend on PTY, GPUI, Paneflow, windowing, or platform
+APIs. `terminal-render-model` does not depend on a concrete renderer.
 
-## Demarrage Rapide
+## Quick Start
 
-Prerequis: Rust 1.85 ou plus recent.
+Prerequisite: Rust 1.85 or newer.
 
 ```powershell
 cargo check --workspace
@@ -105,28 +108,28 @@ cargo run -p terminal-core --example headless_embedder
 cargo run -p terminal-cli -- replay crates/terminal-fixtures/fixtures/m1-golden.json
 ```
 
-Executer une commande reelle via PTY sous Windows:
+Run a real command through a PTY on Windows:
 
 ```powershell
 cargo run -p terminal-cli -- run -- cmd.exe /D /C "echo Hera"
 ```
 
-Sous Linux ou macOS:
+On Linux or macOS:
 
 ```sh
 cargo run -p terminal-cli -- run -- /bin/sh -lc "printf 'Hera\n'"
 ```
 
-Sans argument, `terminal-cli` affiche la liste complete des commandes de debug,
-replay, benchmark et validation:
+With no arguments, `terminal-cli` prints the full set of debugging, replay,
+benchmark, and validation commands:
 
 ```powershell
 cargo run -p terminal-cli --
 ```
 
-## Embedding Headless
+## Headless Embedding
 
-L'API minimale consomme des bytes puis produit un snapshot neutre:
+The minimal API consumes bytes and produces a neutral snapshot:
 
 ```rust
 use terminal_core::{ScrollbackConfig, Terminal, TerminalConfig};
@@ -145,19 +148,18 @@ let snapshot = terminal.render_snapshot();
 println!("rows={}", snapshot.viewport_rows().len());
 ```
 
-Exemples complets:
+Complete examples:
 
 - [`crates/terminal-core/examples/headless_embedder.rs`](crates/terminal-core/examples/headless_embedder.rs)
 - [`crates/terminal-pty/examples/pty_boundary.rs`](crates/terminal-pty/examples/pty_boundary.rs)
 
-## Verification Et Evidence
+## Validation and Evidence
 
-La correction terminal repose sur des inputs bruts et des snapshots golden, pas
-sur la confiance dans un shell local. La matrice M5 couvre notamment les
-controles C0, CUP/HVP, ED/EL/ECH, scrollback, SGR, alternate screen,
-resize/reflow et bracketed paste.
+Terminal correctness is backed by raw inputs and golden snapshots, not trust in
+one local shell. The M5 matrix covers C0 controls, CUP/HVP, ED/EL/ECH,
+scrollback, SGR, alternate screen behavior, resize/reflow, and bracketed paste.
 
-Commandes de validation principales:
+Primary validation commands:
 
 ```powershell
 cargo fmt --check
@@ -168,43 +170,40 @@ cargo run -p terminal-cli -- validate-m5-compatibility evidence/m5/compatibility
 cargo run -p terminal-cli -- validate-m5-evidence evidence/m5/evidence-manifest.json
 ```
 
-Les scenarios live PTY sont separes du test workspace normal:
+Live PTY scenarios are separate from the normal workspace test suite:
 
 ```powershell
 cargo test -p terminal-pty --features live-pty-tests --test live_pty -- --ignored
 ```
 
-## Direction M6
+## M6 Direction
 
-M6 mesure une frontiere precise: Hera devient la source visuelle autoritative de
-panes Paneflow selectionnees, tandis que le PTY, l'input-mode authority et le
-chemin par defaut restent controles. Le canary doit prouver zero mismatch P0,
-zero fallback, zero byte perdu, une latence bornee et une memoire comparable au
-controle Alacritty avant tout elargissement.
+M6 measures a precise boundary: Hera becomes the authoritative visual source for
+selected Paneflow panes while the existing PTY, input-mode authority, and
+default path remain controlled. Before any expansion, the canary must prove zero
+P0 mismatches, zero fallbacks, zero dropped bytes, bounded latency, and memory
+usage comparable to the Alacritty control.
 
-Un succes Windows autorise au maximum un canary plus large. Le remplacement par
-defaut reste interdit tant que les interactions essentielles, Linux, macOS et
-les gates de non-regression ne sont pas mesures.
+A successful Windows run can authorize only a broader canary. Default
+replacement remains prohibited until essential interactions and Linux/macOS
+behavior have been measured and the regression gates have passed.
 
 ## Documentation
 
-- [`docs/research-map.md`](docs/research-map.md): decision register et architecture de reference
-- [`tasks/prd-m6-paneflow-controlled-host-replacement.md`](tasks/prd-m6-paneflow-controlled-host-replacement.md): contrat M6 courant
-- [`tasks/prd-m6-paneflow-controlled-host-replacement-status.json`](tasks/prd-m6-paneflow-controlled-host-replacement-status.json): progression M6 courante
-- [`evidence/m6/m6-baseline.json`](evidence/m6/m6-baseline.json): baseline publique et policy de decision M6
-- [`docs/m5-compatibility-release-hardening-report.md`](docs/m5-compatibility-release-hardening-report.md): cloture historique M5
-- [`docs/m4-public-proof-report.md`](docs/m4-public-proof-report.md): preuve publique M4
-- [`docs/reference-inventory/`](docs/reference-inventory/): inventaires par engine
-- [`evidence/m5/`](evidence/m5/): evidence machine-readable M5
-- [`tasks/`](tasks/): PRD et trackers de milestones
+- [`docs/research-map.md`](docs/research-map.md): decision register and reference architecture
+- [`docs/m5-compatibility-release-hardening-report.md`](docs/m5-compatibility-release-hardening-report.md): historical M5 closeout
+- [`docs/m4-public-proof-report.md`](docs/m4-public-proof-report.md): M4 public proof
+- [`docs/reference-inventory/`](docs/reference-inventory/): per-engine inventories
+- [`evidence/m5/`](evidence/m5/): machine-readable M5 evidence
+- [`tasks/`](tasks/): milestone PRDs and status trackers
 
-## Principes Non Negociables
+## Non-Negotiable Principles
 
-- Rust-first et Rust-public.
-- Correction terminal avant surface produit.
-- APIs publiques petites, stables et renderer-neutral.
-- Scrollback borne par politique explicite, jamais "infini".
-- Snapshots et replay traites comme des capacites de base.
-- Features agentiques optionnelles et non autoritatives.
-- Aucun type Paneflow, GPUI, PTY ou plateforme dans `terminal-core`.
-- Protocoles privilegies parses comme donnees, jamais executes par le host.
+- Rust-first and Rust-public.
+- Terminal correctness before product surface area.
+- Small, stable, renderer-neutral public APIs.
+- Explicitly bounded scrollback, never "infinite" scrollback.
+- Snapshots and replay treated as foundational capabilities.
+- Optional, non-authoritative agent-aware features.
+- No Paneflow, GPUI, PTY, or platform types in `terminal-core`.
+- Privileged protocols are parsed as data and never executed by the host.
