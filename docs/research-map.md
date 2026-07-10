@@ -1,7 +1,7 @@
 # Research Map
 
-Status: M5 final report recorded, M6 compatibility and release hardening recommended
-Date: 2026-07-04
+Status: M6 controlled Paneflow render-authority experiment in progress
+Date: 2026-07-10
 Scope: architecture research and decision register for `Hera`, not implementation.
 
 ## Executive Synthesis
@@ -1152,7 +1152,7 @@ These are the public specs/docs worth keeping near the repo:
 | Smallest Paneflow API? | Byte ingestion, render snapshot, viewport query, snapshot/replay, semantic observer events. No Paneflow types. |
 | Tests beyond local confidence? | Upstream-inspired golden fixtures, xterm/VTTEST/esctest2 corpus, fuzzing, ConPTY replay corpus and memory benchmarks. |
 
-## M5 Final Report And M6 Recommendation
+## M5 Final Report And M6 Direction
 
 M1 through M5 now provide staged proof, not release maturity. Hera has a
 headless core, PTY runtime boundary, Paneflow shadow evidence contracts, public
@@ -1164,29 +1164,31 @@ lives in `docs/m5-compatibility-release-hardening-report.md` and under
 matrix, scrubbed replay derivatives, Paneflow shadow scenario contract,
 platform rows, package readiness, API audit and security posture.
 
-The current verdict is still not host replacement or public pre-release
+The current verdict is still not default host replacement or public pre-release
 packaging. Compatibility and replay evidence improved materially: CSI
 positioning, ED/EL/ECH and DEC private modes 47/1047/1048 are fixture-backed,
-and Codex/Claude Code derivatives replay deterministically. The remaining
-blockers are operational and release-facing: the live Paneflow shadow rerun is
-checked in as a scrubbed failed summary with 28 P0 mismatch reports,
-Linux/macOS are blocked rather than measured, dependent package dry-runs fail
-on unpublished Hera crates, `cargo-semver-checks` is unavailable, `cargo-audit`
-and Scorecard are unavailable locally, and `cargo-deny` fails without an
-explicit license policy.
+and Codex/Claude Code derivatives replay deterministically. The 2026-07-10
+isolated Paneflow live shadow run also completed two scripted panes for the full
+45-minute target with zero mismatch report files.
 
-Recommended M6: another focused compatibility and release hardening milestone.
-Do not replace Paneflow's terminal path yet. Do not publish Hera crates yet.
-M6 should fix the live Paneflow shadow mismatches and produce a zero-P0
-scrubbed summary, measure Linux and macOS via local runners or CI, add explicit
-cargo-deny policy, run cargo-audit or equivalent advisory evidence, run OpenSSF
-Scorecard through CLI or GitHub Action, decide package staging for unpublished
-Hera crates and run semver baseline tooling before any stable public API
-promise.
+That targeted pass unlocks one narrower M6 experiment: make Hera the visible
+render authority for explicitly selected Paneflow panes while retaining the
+existing PTY transport, input-mode authority and default Alacritty path. M6 must
+keep engine ownership immutable per pane, expose an explicit fallback, measure
+the visible Windows canary and record a go/no-go decision from scrubbed
+evidence. It must not remove Alacritty, replace the PTY runtime or make Hera the
+default.
 
-The threshold to unlock host replacement experiments remains no P0 terminal
-mismatch in longer Paneflow shadow dogfood, pass or accepted blocked status for
-platform rows, and no release-blocking security finding. The threshold to unlock
-public pre-release packaging is clean dry-runs or an accepted staging plan for
-all intended public crates, plus security and semver evidence without hidden
-blocked checks.
+The active contract and tracker are
+`tasks/prd-m6-paneflow-controlled-host-replacement.md` and
+`tasks/prd-m6-paneflow-controlled-host-replacement-status.json`. The M5 report
+remains the historical closeout; this decision register and the M6 PRD carry
+the subsequent host-experiment decision.
+
+A successful Windows canary can authorize a broader canary, not default or
+cross-platform replacement. Linux/macOS remain blocked rather than measured,
+and every required interaction, fallback, output-ordering, latency, memory and
+non-regression gate must stay explicit. Public packaging remains a separate
+blocked track: dependent dry-runs still need a staging strategy,
+`cargo-semver-checks` is unavailable, `cargo-audit` and Scorecard are
+unavailable locally, and `cargo-deny` still lacks an explicit license policy.
