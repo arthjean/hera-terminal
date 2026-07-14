@@ -9,6 +9,7 @@ use terminal_render_model::{
     CellStyle, Color, CursorState, DamageRegion, RenderCell, RenderSnapshot, RowHandle,
     ScreenIdentity, ScrollbackRow, ViewportRow,
 };
+use unicode_width::UnicodeWidthChar;
 
 #[cfg(test)]
 use terminal_render_model::ImagePlaceholder;
@@ -322,6 +323,12 @@ impl TerminalState {
 
     fn snapshot_with_damage(&self, damage: Vec<DamageRegion>) -> RenderSnapshot {
         let active = self.active_screen_ref();
+        let mut cursor = active.cursor;
+        let cursor_row = cursor.row().min(active.rows.len() - 1);
+        let cursor_column = cursor.column().min(active.rows[cursor_row].cells.len() - 1);
+        if cursor_column > 0 && active.rows[cursor_row].cells[cursor_column].width() == 0 {
+            cursor = CursorState::new(cursor_row, cursor_column - 1, cursor.visible());
+        }
         let scrollback = if self.active_screen == ScreenIdentity::Primary {
             self.scrollback.rows()
         } else {
@@ -332,7 +339,7 @@ impl TerminalState {
             self.config.dimensions.columns(),
             self.config.dimensions.rows(),
             self.active_screen,
-            active.cursor,
+            cursor,
             active.viewport_rows(),
             scrollback,
             damage,
@@ -345,15 +352,39 @@ impl TerminalState {
         }
 
         let ch = printable.ch();
-        let width = printable_width(ch);
         let columns = self.config.dimensions.columns();
+        let width = printable_width(ch).min(columns.min(2) as u8);
+        if width == 0 {
+            return;
+        }
+
         let row = self.active_screen_ref().cursor.row();
         let column = self.active_screen_ref().cursor.column();
+        if width > 1 && column + usize::from(width) > columns {
+            self.clear_wide_partner_at(row, column);
+            let style = self.style;
+            let screen = self.active_screen_mut();
+            screen.rows[row].cells[column] = RenderCell::text(' ', 1, style);
+            screen.pending_wrap = true;
+            self.damage.mark(row);
+            self.wrap_pending();
+        }
+
+        let row = self.active_screen_ref().cursor.row();
+        let column = self.active_screen_ref().cursor.column();
+        self.clear_wide_partner_at(row, column);
+        if width > 1 {
+            self.clear_wide_partner_at(row, column + 1);
+        }
 
         {
             let style = self.style;
             let screen = self.active_screen_mut();
             screen.rows[row].cells[column] = RenderCell::text(ch, width, style);
+
+            if width > 1 && column + 1 < columns {
+                screen.rows[row].cells[column + 1] = RenderCell::text(' ', 0, style);
+            }
 
             if column + usize::from(width) >= columns {
                 screen.pending_wrap = true;
@@ -363,6 +394,36 @@ impl TerminalState {
             }
         }
 
+        self.damage.mark(row);
+    }
+
+    fn clear_wide_partner_at(&mut self, row: usize, column: usize) {
+        let columns = self.config.dimensions.columns();
+        if row >= self.config.dimensions.rows() || column >= columns {
+            return;
+        }
+
+        let width = self.active_screen_ref().rows[row].cells[column].width();
+        let partner = if width > 1 && column + 1 < columns {
+            Some(column + 1)
+        } else if width == 0 && column > 0 {
+            Some(column - 1)
+        } else {
+            None
+        };
+        let Some(partner) = partner else {
+            return;
+        };
+
+        let partner_cell = &self.active_screen_ref().rows[row].cells[partner];
+        let is_pair =
+            (width > 1 && partner_cell.width() == 0) || (width == 0 && partner_cell.width() > 1);
+        if !is_pair {
+            return;
+        }
+
+        let style = partner_cell.style();
+        self.active_screen_mut().rows[row].cells[partner] = RenderCell::text(' ', 1, style);
         self.damage.mark(row);
     }
 
@@ -561,7 +622,8 @@ impl TerminalState {
 
     fn set_cursor_visible(&mut self, visible: bool) {
         let row = self.active_screen_ref().cursor.row();
-        self.active_screen_mut().set_cursor_visible(visible);
+        self.primary.set_cursor_visible(visible);
+        self.alternate.set_cursor_visible(visible);
         self.damage.mark(row);
     }
 
@@ -608,7 +670,7 @@ impl TerminalState {
             .saturating_add(count)
             .min(self.config.dimensions.columns());
 
-        self.clear_cells(row, column, end);
+        self.clear_cells_with_current_background(row, column, end);
         self.active_screen_mut().pending_wrap = false;
     }
 
@@ -876,7 +938,7 @@ impl TerminalState {
         let rows = self.config.dimensions.rows();
         let columns = self.config.dimensions.columns();
 
-        self.clear_cells(row, column, columns);
+        self.clear_cells_with_current_background(row, column, columns);
         for target_row in row + 1..rows {
             self.clear_cells(target_row, 0, columns);
         }
@@ -891,7 +953,7 @@ impl TerminalState {
         for target_row in 0..row {
             self.clear_cells(target_row, 0, columns);
         }
-        self.clear_cells(row, 0, column.saturating_add(1).min(columns));
+        self.clear_cells_with_current_background(row, 0, column.saturating_add(1).min(columns));
         self.active_screen_mut().pending_wrap = false;
     }
 
@@ -899,23 +961,39 @@ impl TerminalState {
         let rows = self.config.dimensions.rows();
         let columns = self.config.dimensions.columns();
 
+        if self.active_screen == ScreenIdentity::Primary {
+            let occupied_rows = self
+                .primary
+                .rows
+                .iter()
+                .rposition(|row| !row.is_empty())
+                .map_or(1, |row| row + 1);
+
+            for _ in 0..occupied_rows {
+                self.scroll_active_screen_up();
+            }
+        }
+
         for row in 0..rows {
-            self.clear_cells(row, 0, columns);
+            self.clear_cells_with_current_background(row, 0, columns);
         }
         self.active_screen_mut().pending_wrap = false;
     }
 
     fn erase_line_from_cursor(&mut self) {
+        if self.active_screen_ref().pending_wrap {
+            return;
+        }
         let row = self.active_screen_ref().cursor.row();
         let column = self.active_screen_ref().cursor.column();
-        self.clear_cells(row, column, self.config.dimensions.columns());
+        self.clear_cells_with_current_background(row, column, self.config.dimensions.columns());
         self.active_screen_mut().pending_wrap = false;
     }
 
     fn erase_line_to_cursor(&mut self) {
         let row = self.active_screen_ref().cursor.row();
         let column = self.active_screen_ref().cursor.column();
-        self.clear_cells(
+        self.clear_cells_with_current_background(
             row,
             0,
             column
@@ -927,11 +1005,30 @@ impl TerminalState {
 
     fn erase_line_all(&mut self) {
         let row = self.active_screen_ref().cursor.row();
-        self.clear_cells(row, 0, self.config.dimensions.columns());
+        self.clear_cells_with_current_background(row, 0, self.config.dimensions.columns());
         self.active_screen_mut().pending_wrap = false;
     }
 
     fn clear_cells(&mut self, row: usize, start_column: usize, end_column: usize) {
+        self.fill_erased_cells(row, start_column, end_column, None);
+    }
+
+    fn clear_cells_with_current_background(
+        &mut self,
+        row: usize,
+        start_column: usize,
+        end_column: usize,
+    ) {
+        self.fill_erased_cells(row, start_column, end_column, self.style.background());
+    }
+
+    fn fill_erased_cells(
+        &mut self,
+        row: usize,
+        start_column: usize,
+        end_column: usize,
+        background: Option<Color>,
+    ) {
         let columns = self.config.dimensions.columns();
         if row >= self.config.dimensions.rows()
             || start_column >= columns
@@ -940,14 +1037,24 @@ impl TerminalState {
             return;
         }
         let end_column = end_column.min(columns);
+        let erased = RenderCell::text(
+            ' ',
+            1,
+            CellStyle::new(None, background, false, false, false, false),
+        );
         let screen = self.active_screen_mut();
         for cell in &mut screen.rows[row].cells[start_column..end_column] {
-            *cell = RenderCell::empty();
+            *cell = erased.clone();
+        }
+        if end_column == columns {
+            screen.rows[row].wrapped = false;
         }
         self.damage.mark(row);
     }
 
     fn resize_active_primary(&mut self, dimensions: Dimensions) {
+        self.resize_primary_height(dimensions.rows());
+
         let scrollback_len = self.scrollback.len();
         let cursor_global_row = scrollback_len.saturating_add(self.primary.cursor.row());
         let cursor_column = self.primary.cursor.column();
@@ -967,8 +1074,8 @@ impl TerminalState {
             dimensions.columns(),
             &mut self.next_row_id,
         );
-        let split_at =
-            visible_start_for_cursor(reflowed.rows.len(), dimensions.rows(), reflowed.cursor_row);
+        let bottom_split = reflowed.rows.len().saturating_sub(dimensions.rows());
+        let split_at = bottom_split.min(reflowed.cursor_row);
         let cursor_row = reflowed
             .cursor_row
             .saturating_sub(split_at)
@@ -997,6 +1104,56 @@ impl TerminalState {
             CursorState::new(cursor_row, reflowed.cursor_column, true),
             reflowed.pending_wrap,
         );
+    }
+
+    fn resize_primary_height(&mut self, rows: usize) {
+        let current_rows = self.primary.rows.len();
+        if rows < current_rows {
+            let cursor_row = self.primary.cursor.row();
+            let required_scrolling = cursor_row.saturating_add(1).saturating_sub(rows);
+
+            for _ in 0..required_scrolling {
+                let Some(removed) = self.primary.rows.pop_front() else {
+                    break;
+                };
+                self.scrollback.push(removed);
+            }
+            while self.primary.rows.len() > rows {
+                self.primary.rows.pop_back();
+            }
+
+            self.primary.cursor = CursorState::new(
+                cursor_row.saturating_sub(required_scrolling).min(rows - 1),
+                self.primary.cursor.column(),
+                self.primary.cursor.visible(),
+            );
+        } else if rows > current_rows {
+            let added_rows = rows - current_rows;
+            let from_history = added_rows.min(self.scrollback.len());
+
+            for _ in 0..from_history {
+                let Some(row) = self.scrollback.pop_back() else {
+                    break;
+                };
+                self.primary.rows.push_front(row);
+            }
+            while self.primary.rows.len() < rows {
+                self.primary.rows.push_back(blank_row(
+                    self.config.dimensions.columns(),
+                    &mut self.next_row_id,
+                ));
+            }
+
+            self.primary.cursor = CursorState::new(
+                self.primary
+                    .cursor
+                    .row()
+                    .saturating_add(from_history)
+                    .min(rows - 1),
+                self.primary.cursor.column(),
+                self.primary.cursor.visible(),
+            );
+        }
     }
 
     fn resize_while_alternate_active(&mut self, dimensions: Dimensions) {
@@ -1135,6 +1292,10 @@ impl Row {
         ScrollbackRow::new(self.handle, self.cells.clone(), self.wrapped)
     }
 
+    fn is_empty(&self) -> bool {
+        !self.wrapped && self.cells.iter().all(render_cell_is_empty)
+    }
+
     fn resize_width(&mut self, columns: usize) {
         self.handle = next_generation(self.handle);
         self.cells.resize(columns, RenderCell::empty());
@@ -1155,6 +1316,17 @@ impl Row {
                     .sum::<usize>(),
             )
     }
+}
+
+fn render_cell_is_empty(cell: &RenderCell) -> bool {
+    let style = cell.style();
+    matches!(cell.ch(), ' ' | '\t')
+        && cell.width() == 1
+        && style.foreground().is_none()
+        && style.background().is_none()
+        && !style.underline()
+        && !style.inverse()
+        && cell.image().is_none()
 }
 
 struct Scrollback {
@@ -1200,6 +1372,12 @@ impl Scrollback {
 
     fn iter(&self) -> impl Iterator<Item = &Row> {
         self.rows.iter()
+    }
+
+    fn pop_back(&mut self) -> Option<Row> {
+        let row = self.rows.pop_back()?;
+        self.byte_len = self.byte_len.saturating_sub(row.estimated_bytes());
+        Some(row)
     }
 
     fn trim(&mut self) {
@@ -1274,7 +1452,7 @@ impl DamageTracker {
 }
 
 fn printable_width(ch: char) -> u8 {
-    if ch == '\0' { 0 } else { 1 }
+    ch.width().unwrap_or(0).min(2) as u8
 }
 
 fn sgr_u8(value: u16) -> u8 {
@@ -1309,6 +1487,7 @@ struct LogicalLine {
     cells: Vec<RenderCell>,
     handles: Vec<RowHandle>,
     cursor_offset: Option<usize>,
+    cursor_pending_wrap: bool,
 }
 
 fn reflow_rows(
@@ -1319,20 +1498,28 @@ fn reflow_rows(
     columns: usize,
     next_row_id: &mut u64,
 ) -> ReflowResult {
-    let logical_lines = logical_lines(rows, cursor_global_row, cursor_column, cursor_pending_wrap);
+    let logical_lines = logical_lines(
+        rows,
+        cursor_global_row,
+        cursor_column,
+        cursor_pending_wrap,
+        columns,
+    );
     let mut output = Vec::new();
     let mut cursor_row = 0;
     let mut cursor_column = 0;
     let mut pending_wrap = false;
 
     for line in logical_lines {
+        let line = with_wide_boundary_spacers(line, columns);
         let line_start = output.len();
         let line_len = line.cells.len();
         let cursor_offset = line.cursor_offset;
+        let cursor_pending_wrap = line.cursor_pending_wrap;
         let rows = visual_rows(line, columns, next_row_id);
 
         if let Some(cursor_offset) = cursor_offset {
-            let placement = cursor_placement(cursor_offset, line_len, columns);
+            let placement = cursor_placement(cursor_offset, line_len, columns, cursor_pending_wrap);
             cursor_row = line_start + placement.row;
             cursor_column = placement.column;
             pending_wrap = placement.pending_wrap;
@@ -1353,17 +1540,43 @@ fn reflow_rows(
     }
 }
 
+fn with_wide_boundary_spacers(mut line: LogicalLine, columns: usize) -> LogicalLine {
+    let source_len = line.cells.len();
+    let source_cursor = line.cursor_offset;
+    let mut cursor_offset = None;
+    let mut cells = Vec::with_capacity(source_len);
+
+    for (index, cell) in line.cells.into_iter().enumerate() {
+        if source_cursor == Some(index) {
+            cursor_offset = Some(cells.len());
+        }
+        if cell.width() > 1 && cells.len() % columns == columns - 1 {
+            cells.push(RenderCell::empty());
+        }
+        cells.push(cell);
+    }
+    if source_cursor == Some(source_len) {
+        cursor_offset = Some(cells.len());
+    }
+
+    line.cells = cells;
+    line.cursor_offset = cursor_offset;
+    line
+}
+
 fn logical_lines(
     rows: Vec<Row>,
     cursor_global_row: usize,
     cursor_column: usize,
     cursor_pending_wrap: bool,
+    columns: usize,
 ) -> Vec<LogicalLine> {
     let mut lines = Vec::new();
     let mut current = LogicalLine {
         cells: Vec::new(),
         handles: Vec::new(),
         cursor_offset: None,
+        cursor_pending_wrap: false,
     };
 
     for (row_index, row) in rows.into_iter().enumerate() {
@@ -1379,13 +1592,23 @@ fn logical_lines(
         let segment_len = if row.wrapped {
             row.cells.len()
         } else {
-            occupied_cell_count(&row.cells).max(cursor_extent)
+            let preserved_columns = if current.cells.is_empty() {
+                row.cells.len().min(columns)
+            } else {
+                0
+            };
+            occupied_cell_count(&row.cells)
+                .max(preserved_columns)
+                .max(cursor_extent)
         };
         let segment_len = segment_len.min(row.cells.len());
 
         if row_index == cursor_global_row {
             let offset = if cursor_pending_wrap {
-                current.cells.len().saturating_add(row.cells.len())
+                current
+                    .cells
+                    .len()
+                    .saturating_add(row.cells.len().saturating_sub(1))
             } else {
                 current
                     .cells
@@ -1393,6 +1616,7 @@ fn logical_lines(
                     .saturating_add(cursor_column.min(row.cells.len()))
             };
             current.cursor_offset = Some(offset);
+            current.cursor_pending_wrap = cursor_pending_wrap;
         }
 
         current.handles.push(row.handle);
@@ -1406,6 +1630,7 @@ fn logical_lines(
                 cells: Vec::new(),
                 handles: Vec::new(),
                 cursor_offset: None,
+                cursor_pending_wrap: false,
             };
         }
     }
@@ -1456,7 +1681,21 @@ struct CursorPlacement {
 
 // Keep the modulo form until Hera's MSRV includes `usize::is_multiple_of`.
 #[allow(clippy::manual_is_multiple_of)]
-fn cursor_placement(offset: usize, line_len: usize, columns: usize) -> CursorPlacement {
+fn cursor_placement(
+    offset: usize,
+    line_len: usize,
+    columns: usize,
+    cursor_pending_wrap: bool,
+) -> CursorPlacement {
+    if cursor_pending_wrap {
+        let column = (offset % columns).min(columns - 1);
+        return CursorPlacement {
+            row: offset / columns,
+            column,
+            pending_wrap: column == columns - 1,
+        };
+    }
+
     if line_len > 0 && offset >= line_len && line_len % columns == 0 {
         return CursorPlacement {
             row: (line_len / columns).saturating_sub(1),
@@ -1472,22 +1711,10 @@ fn cursor_placement(offset: usize, line_len: usize, columns: usize) -> CursorPla
     }
 }
 
-fn visible_start_for_cursor(total_rows: usize, viewport_rows: usize, cursor_row: usize) -> usize {
-    if total_rows <= viewport_rows {
-        return 0;
-    }
-
-    let max_start = total_rows - viewport_rows;
-    cursor_row
-        .saturating_add(1)
-        .saturating_sub(viewport_rows)
-        .min(max_start)
-}
-
 fn occupied_cell_count(cells: &[RenderCell]) -> usize {
     cells
         .iter()
-        .rposition(|cell| *cell != RenderCell::empty())
+        .rposition(|cell| !render_cell_is_empty(cell))
         .map_or(0, |index| index + 1)
 }
 

@@ -1,0 +1,344 @@
+{
+  "prd": {
+    "file": "tasks/prd-m6-paneflow-controlled-host-replacement.md",
+    "title": "M6 Paneflow Controlled Host Replacement",
+    "created_at": "2026-07-10",
+    "status": "BLOCKED"
+  },
+  "epics": [
+    {
+      "id": "EP-001",
+      "title": "Experiment Contract And Activation",
+      "status": "DONE",
+      "priority": "P0",
+      "stories_total": 3,
+      "stories_done": 3
+    },
+    {
+      "id": "EP-002",
+      "title": "Hera Authoritative Render Path",
+      "status": "DONE",
+      "priority": "P0",
+      "stories_total": 3,
+      "stories_done": 3
+    },
+    {
+      "id": "EP-003",
+      "title": "PTY, Input, Resize And Lifecycle",
+      "status": "DONE",
+      "priority": "P0",
+      "stories_total": 3,
+      "stories_done": 3
+    },
+    {
+      "id": "EP-004",
+      "title": "Essential Terminal Interactions",
+      "status": "IN_REVIEW",
+      "priority": "P0",
+      "stories_total": 3,
+      "stories_done": 0
+    },
+    {
+      "id": "EP-005",
+      "title": "Observability, Fallback And Non-Regression",
+      "status": "DONE",
+      "priority": "P0",
+      "stories_total": 3,
+      "stories_done": 3
+    },
+    {
+      "id": "EP-006",
+      "title": "Visible Canary And Exit Decision",
+      "status": "BLOCKED",
+      "priority": "P0",
+      "stories_total": 3,
+      "stories_done": 1
+    },
+    {
+      "id": "EP-007",
+      "title": "Targeted Host Hardening And Canary Recovery",
+      "status": "BLOCKED",
+      "priority": "P0",
+      "stories_total": 5,
+      "stories_done": 3
+    }
+  ],
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Freeze The M6 Baseline And Decision Policy",
+      "epic": "EP-001",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "S",
+      "blocked_by": [],
+      "started_at": "2026-07-10T11:49:14Z",
+      "completed_at": "2026-07-10T12:30:34Z",
+      "reviewed_at": "2026-07-10T12:30:34Z"
+    },
+    {
+      "id": "US-002",
+      "title": "Add The Additive Hera Host Gate And Runtime Selector",
+      "epic": "EP-001",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": ["US-001"],
+      "started_at": "2026-07-10T11:55:57Z",
+      "completed_at": "2026-07-10T12:30:34Z",
+      "reviewed_at": "2026-07-10T12:30:34Z"
+    },
+    {
+      "id": "US-003",
+      "title": "Define Immutable Per-Pane Engine Ownership",
+      "epic": "EP-001",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": ["US-002"],
+      "started_at": "2026-07-10T12:01:48Z",
+      "completed_at": "2026-07-10T12:30:34Z",
+      "reviewed_at": "2026-07-10T12:30:34Z"
+    },
+    {
+      "id": "US-004",
+      "title": "Promote One Hera Session To The Host Render Source",
+      "epic": "EP-002",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": ["US-003"],
+      "started_at": "2026-07-10T12:40:22Z",
+      "completed_at": "2026-07-10T15:34:35Z",
+      "reviewed_at": "2026-07-10T15:34:35Z"
+    },
+    {
+      "id": "US-005",
+      "title": "Feed Hera Content Into The Existing Terminal Element",
+      "epic": "EP-002",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": ["US-004"],
+      "started_at": "2026-07-10T12:47:53Z",
+      "completed_at": "2026-07-10T15:34:35Z",
+      "reviewed_at": "2026-07-10T15:34:35Z"
+    },
+    {
+      "id": "US-006",
+      "title": "Make Hera Visible For Selected Panes",
+      "epic": "EP-002",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": ["US-005"],
+      "started_at": "2026-07-10T12:48:05Z",
+      "completed_at": "2026-07-10T15:34:35Z",
+      "reviewed_at": "2026-07-10T15:34:35Z"
+    },
+    {
+      "id": "US-007",
+      "title": "Preserve Ordered PTY Output And Bounded Backpressure",
+      "epic": "EP-003",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": ["US-004"],
+      "started_at": "2026-07-10T15:48:46Z",
+      "completed_at": "2026-07-10T16:10:00Z",
+      "reviewed_at": "2026-07-10T16:10:00Z"
+    },
+    {
+      "id": "US-008",
+      "title": "Synchronize Resize, Focus, Keyboard And Paste",
+      "epic": "EP-003",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": ["US-003", "US-004"],
+      "started_at": "2026-07-10T16:07:32Z",
+      "completed_at": "2026-07-10T16:10:00Z",
+      "reviewed_at": "2026-07-10T16:10:00Z"
+    },
+    {
+      "id": "US-009",
+      "title": "Preserve Spawn, Exit, Close And Host Metadata",
+      "epic": "EP-003",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": ["US-007", "US-008"],
+      "started_at": "2026-07-10T16:09:51Z",
+      "completed_at": "2026-07-10T16:10:00Z",
+      "reviewed_at": "2026-07-10T16:10:00Z"
+    },
+    {
+      "id": "US-010",
+      "title": "Support Hera Scrollback And Viewport Navigation",
+      "epic": "EP-004",
+      "status": "IN_REVIEW",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": ["US-005", "US-007"],
+      "started_at": "2026-07-10T16:14:16Z",
+      "completed_at": null,
+      "reviewed_at": "2026-07-10T16:40:20Z"
+    },
+    {
+      "id": "US-011",
+      "title": "Preserve Selection, Copy And Search",
+      "epic": "EP-004",
+      "status": "IN_REVIEW",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": ["US-010"],
+      "started_at": "2026-07-10T16:14:16Z",
+      "completed_at": null,
+      "reviewed_at": "2026-07-10T16:40:20Z"
+    },
+    {
+      "id": "US-012",
+      "title": "Preserve Hyperlinks, IME And Visual Terminal State",
+      "epic": "EP-004",
+      "status": "IN_REVIEW",
+      "priority": "P1",
+      "size": "L",
+      "blocked_by": ["US-005", "US-008"],
+      "started_at": "2026-07-10T16:14:16Z",
+      "completed_at": null,
+      "reviewed_at": "2026-07-10T16:40:20Z"
+    },
+    {
+      "id": "US-013",
+      "title": "Add The M6 Evidence Contract And Runtime Metrics",
+      "epic": "EP-005",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": ["US-001", "US-003"],
+      "started_at": "2026-07-10T17:12:50Z",
+      "completed_at": "2026-07-10T17:41:13Z",
+      "reviewed_at": "2026-07-10T17:41:13Z"
+    },
+    {
+      "id": "US-014",
+      "title": "Implement Automatic Per-Pane Fallback",
+      "epic": "EP-005",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": ["US-004", "US-007", "US-013"],
+      "started_at": "2026-07-10T17:12:50Z",
+      "completed_at": "2026-07-10T17:41:13Z",
+      "reviewed_at": "2026-07-10T17:41:13Z"
+    },
+    {
+      "id": "US-015",
+      "title": "Prove Default And Dual-Path Non-Regression",
+      "epic": "EP-005",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": ["US-006", "US-009", "US-014"],
+      "started_at": "2026-07-10T17:12:50Z",
+      "completed_at": "2026-07-10T17:41:13Z",
+      "reviewed_at": "2026-07-10T17:41:13Z"
+    },
+    {
+      "id": "US-016",
+      "title": "Run The Visible Windows Hera Canary",
+      "epic": "EP-006",
+      "status": "BLOCKED",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": ["US-012", "US-015"],
+      "started_at": "2026-07-10T18:50:18Z",
+      "completed_at": null,
+      "reviewed_at": "2026-07-10T20:42:44Z"
+    },
+    {
+      "id": "US-017",
+      "title": "Measure Linux And macOS Feature-Gate Behavior",
+      "epic": "EP-006",
+      "status": "BLOCKED",
+      "priority": "P1",
+      "size": "L",
+      "blocked_by": ["US-015"],
+      "started_at": "2026-07-10T19:11:11Z",
+      "completed_at": null,
+      "reviewed_at": "2026-07-10T20:42:44Z"
+    },
+    {
+      "id": "US-018",
+      "title": "Publish The M6 Go/No-Go Report",
+      "epic": "EP-006",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": ["US-016", "US-017"],
+      "started_at": "2026-07-10T20:34:01Z",
+      "completed_at": "2026-07-10T20:42:44Z",
+      "reviewed_at": "2026-07-10T20:42:44Z"
+    },
+    {
+      "id": "US-019",
+      "title": "Classify And Reproduce The M6 Mismatches",
+      "epic": "EP-007",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "M",
+      "blocked_by": ["US-018"],
+      "started_at": "2026-07-10T21:00:00Z",
+      "completed_at": "2026-07-10T22:07:04Z",
+      "reviewed_at": "2026-07-10T22:07:04Z"
+    },
+    {
+      "id": "US-020",
+      "title": "Make Comparison Checkpoints Sequence-Coherent",
+      "epic": "EP-007",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": ["US-019"],
+      "started_at": "2026-07-10T21:00:00Z",
+      "completed_at": "2026-07-10T22:07:04Z",
+      "reviewed_at": "2026-07-10T22:07:04Z"
+    },
+    {
+      "id": "US-021",
+      "title": "Move Hera Ingestion To A Bounded Lossless Worker",
+      "epic": "EP-007",
+      "status": "DONE",
+      "priority": "P0",
+      "size": "XL",
+      "blocked_by": ["US-019", "US-020"],
+      "started_at": "2026-07-10T21:00:00Z",
+      "completed_at": "2026-07-10T22:07:04Z",
+      "reviewed_at": "2026-07-10T22:07:04Z"
+    },
+    {
+      "id": "US-022",
+      "title": "Prove The Hardening With Deterministic And Short-Run Gates",
+      "epic": "EP-007",
+      "status": "BLOCKED",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": ["US-020", "US-021"],
+      "started_at": "2026-07-10T21:00:00Z",
+      "completed_at": null,
+      "reviewed_at": "2026-07-13T21:28:41Z"
+    },
+    {
+      "id": "US-023",
+      "title": "Repeat The Full Windows Canary And Paired Control",
+      "epic": "EP-007",
+      "status": "TODO",
+      "priority": "P0",
+      "size": "L",
+      "blocked_by": ["US-012", "US-022"],
+      "started_at": null,
+      "completed_at": null,
+      "reviewed_at": "2026-07-13T21:28:41Z"
+    }
+  ]
+}

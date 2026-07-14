@@ -32,6 +32,10 @@ use terminal_fixtures::{
     m5_default_paneflow_dogfood_report, m5_default_replay_fixtures, m5_required_platform_commands,
     serialize_pty_recording_pretty, serialize_snapshot_pretty, snapshot_terminal,
 };
+use terminal_fixtures::{
+    M6Baseline, M6ExitEvidence, M6HardeningTestManifest, M6HostEvidenceManifest,
+    M6MismatchClassification,
+};
 use terminal_pty::{
     M2_DEFAULT_COMMAND_TIMEOUT_MS, M2_MAX_COMMAND_TIMEOUT_MS, M2_MAX_WRITE_CHUNK_BYTES,
     PortablePtyBackend, PtyBackend, PtyBridge, PtyBridgeError, PtyCommand, PtyEvent, PtyEventSink,
@@ -124,6 +128,13 @@ fn run(args: Vec<OsString>) -> CommandOutcome {
         "validate-m5-api-audit" => validate_m5_api_audit_command(&args[1..]),
         "generate-m5-security-baseline" => generate_m5_security_baseline_command(&args[1..]),
         "validate-m5-security-baseline" => validate_m5_security_baseline_command(&args[1..]),
+        "validate-m6-baseline" => validate_m6_baseline_command(&args[1..]),
+        "validate-m6-host-evidence" => validate_m6_host_evidence_command(&args[1..]),
+        "validate-m6-mismatch-classification" => {
+            validate_m6_mismatch_classification_command(&args[1..])
+        }
+        "validate-m6-hardening-tests" => validate_m6_hardening_tests_command(&args[1..]),
+        "validate-m6-exit-evidence" => validate_m6_exit_evidence_command(&args[1..]),
         "verify-m4-replay" => verify_m4_replay_command(&args[1..]),
         "export-m4-event-stream" => export_m4_event_stream_command(&args[1..]),
         "m4-benchmark" => m4_performance_cli::benchmark_command(&args[1..]),
@@ -788,6 +799,103 @@ fn validate_m5_security_baseline_command(args: &[OsString]) -> CommandOutcome {
         baseline.summary.blocked_tools,
         baseline.summary.failed_tools,
         baseline.summary.release_blocking_findings
+    ))
+}
+
+fn validate_m6_baseline_command(args: &[OsString]) -> CommandOutcome {
+    if args.len() != 3 || args[1] != "--paneflow-worktree" {
+        return CommandOutcome::failure(
+            2,
+            "usage: terminal-cli validate-m6-baseline <baseline> --paneflow-worktree <path>",
+        );
+    }
+    let baseline_path = PathBuf::from(&args[0]);
+    let paneflow_worktree = PathBuf::from(&args[2]);
+    let baseline = match M6Baseline::from_path(&baseline_path) {
+        Ok(baseline) => baseline,
+        Err(error) => return CommandOutcome::failure(1, error.to_string()),
+    };
+    let hera_root = evidence_manifest_repo_root(&baseline_path);
+    if let Err(error) = baseline.validate_workspace(&baseline_path, &hera_root, &paneflow_worktree)
+    {
+        return CommandOutcome::failure(1, error.to_string());
+    }
+    CommandOutcome::success(format!(
+        "M6 baseline valid: {} outcomes, Paneflow worktree {}",
+        baseline.outcomes().len(),
+        paneflow_worktree.display()
+    ))
+}
+
+fn validate_m6_host_evidence_command(args: &[OsString]) -> CommandOutcome {
+    let Some(manifest_path) = one_path_arg(args) else {
+        return CommandOutcome::failure(
+            2,
+            "usage: terminal-cli validate-m6-host-evidence <manifest>",
+        );
+    };
+    let manifest = match M6HostEvidenceManifest::from_path(&manifest_path) {
+        Ok(manifest) => manifest,
+        Err(error) => return CommandOutcome::failure(1, error.to_string()),
+    };
+    let repo_root = evidence_manifest_repo_root(&manifest_path);
+    if let Err(error) = manifest.validate_artifact_files(&manifest_path, &repo_root) {
+        return CommandOutcome::failure(1, error.to_string());
+    }
+    CommandOutcome::success(format!(
+        "M6 host evidence valid: {} scrubbed artifacts",
+        manifest.artifacts().len()
+    ))
+}
+
+fn validate_m6_mismatch_classification_command(args: &[OsString]) -> CommandOutcome {
+    let Some(path) = one_path_arg(args) else {
+        return CommandOutcome::failure(
+            2,
+            "usage: terminal-cli validate-m6-mismatch-classification <artifact>",
+        );
+    };
+    match M6MismatchClassification::from_path(path) {
+        Ok(_) => CommandOutcome::success(
+            "M6 mismatch classification valid: 219 P0 mismatches and 1 unsupported checkpoint remain explicitly classified",
+        ),
+        Err(error) => CommandOutcome::failure(1, error.to_string()),
+    }
+}
+
+fn validate_m6_hardening_tests_command(args: &[OsString]) -> CommandOutcome {
+    let Some(path) = one_path_arg(args) else {
+        return CommandOutcome::failure(
+            2,
+            "usage: terminal-cli validate-m6-hardening-tests <manifest>",
+        );
+    };
+    match M6HardeningTestManifest::from_path(path) {
+        Ok(_) => CommandOutcome::success(
+            "M6 hardening tests valid: 25 iterations across 3 non-empty filters",
+        ),
+        Err(error) => CommandOutcome::failure(1, error.to_string()),
+    }
+}
+
+fn validate_m6_exit_evidence_command(args: &[OsString]) -> CommandOutcome {
+    let Some(evidence_path) = one_path_arg(args) else {
+        return CommandOutcome::failure(
+            2,
+            "usage: terminal-cli validate-m6-exit-evidence <evidence>",
+        );
+    };
+    let evidence = match M6ExitEvidence::from_path(&evidence_path) {
+        Ok(evidence) => evidence,
+        Err(error) => return CommandOutcome::failure(1, error.to_string()),
+    };
+    let repo_root = evidence_manifest_repo_root(&evidence_path);
+    if let Err(error) = evidence.validate_artifact_files(&evidence_path, &repo_root) {
+        return CommandOutcome::failure(1, error.to_string());
+    }
+    CommandOutcome::success(format!(
+        "M6 exit evidence valid: decision {:?}",
+        evidence.decision
     ))
 }
 
@@ -3580,7 +3688,7 @@ fn m5_security_baseline_usage() -> String {
 }
 
 fn usage() -> &'static str {
-    "usage: terminal-cli <inject|replay|compare|run|validate-m4-evidence|validate-m4-compatibility|generate-m5-baseline|validate-m5-baseline|validate-m5-evidence|validate-m5-compatibility|validate-m5-go-no-go|generate-m5-replay-derivatives|verify-m5-replay|generate-m5-dogfood-report|validate-m5-dogfood|measure-m5-platform|validate-m5-platform|generate-m5-package-readiness|validate-m5-package-readiness|validate-m5-release-plan|generate-m5-api-audit|validate-m5-api-audit|generate-m5-security-baseline|validate-m5-security-baseline|verify-m4-replay|export-m4-event-stream|m4-benchmark|m4-memory-profile|m4-performance-report> ...\n\nexamples:\n  terminal-cli run -- <program> [args...]\n  terminal-cli run --shell --command \"<command>\"\n  terminal-cli validate-m4-evidence evidence/m4/evidence-manifest.json\n  terminal-cli validate-m4-compatibility evidence/m4/compatibility-matrix.json\n  terminal-cli generate-m5-baseline --output evidence/m5/m5-baseline.json\n  terminal-cli validate-m5-baseline evidence/m5/m5-baseline.json\n  terminal-cli validate-m5-evidence evidence/m5/evidence-manifest.json\n  terminal-cli validate-m5-compatibility evidence/m5/compatibility-matrix.json\n  terminal-cli validate-m5-go-no-go evidence/m5/m5-go-no-go-thresholds.json\n  terminal-cli generate-m5-replay-derivatives --output-dir crates/terminal-fixtures/fixtures/m5-replay\n  terminal-cli verify-m5-replay crates/terminal-fixtures/fixtures/m5-replay --json-output evidence/m5/m5-replay-verification.json\n  terminal-cli generate-m5-dogfood-report --json-output evidence/m5/paneflow-shadow-dogfood.json\n  terminal-cli validate-m5-dogfood evidence/m5/paneflow-shadow-dogfood.json\n  terminal-cli measure-m5-platform --json-output evidence/m5/platform-runtime-evidence.json\n  terminal-cli validate-m5-platform evidence/m5/platform-runtime-evidence.json\n  terminal-cli generate-m5-package-readiness --output evidence/m5/m5-package-readiness.json --release-plan-output evidence/m5/m5-release-plan.json\n  terminal-cli validate-m5-package-readiness evidence/m5/m5-package-readiness.json\n  terminal-cli validate-m5-release-plan evidence/m5/m5-release-plan.json\n  terminal-cli generate-m5-api-audit --output evidence/m5/m5-api-audit.json\n  terminal-cli validate-m5-api-audit evidence/m5/m5-api-audit.json\n  terminal-cli generate-m5-security-baseline --output evidence/m5/m5-security-baseline.json\n  terminal-cli validate-m5-security-baseline evidence/m5/m5-security-baseline.json\n  terminal-cli verify-m4-replay crates/terminal-fixtures/fixtures/m4-replay --json-output evidence/m4/m4-replay-verification.json\n  terminal-cli export-m4-event-stream crates/terminal-fixtures/fixtures/m4-replay/basic-shell.json --output evidence/m4/replay-event-streams/basic-shell.jsonl\n  terminal-cli m4-benchmark --output evidence/m4/m4-benchmark-summary.json\n  terminal-cli m4-memory-profile --output evidence/m4/m4-memory-profile.json\n  terminal-cli m4-performance-report --bench evidence/m4/m4-benchmark-summary.json --memory evidence/m4/m4-memory-profile.json --thresholds evidence/m4/m4-performance-thresholds.json --json-output evidence/m4/m4-performance-report.json --markdown-output docs/m4-benchmarks-and-memory.md"
+    "usage: terminal-cli <inject|replay|compare|run|validate-m4-evidence|validate-m4-compatibility|generate-m5-baseline|validate-m5-baseline|validate-m5-evidence|validate-m5-compatibility|validate-m5-go-no-go|generate-m5-replay-derivatives|verify-m5-replay|generate-m5-dogfood-report|validate-m5-dogfood|measure-m5-platform|validate-m5-platform|generate-m5-package-readiness|validate-m5-package-readiness|validate-m5-release-plan|generate-m5-api-audit|validate-m5-api-audit|generate-m5-security-baseline|validate-m5-security-baseline|validate-m6-baseline|validate-m6-host-evidence|validate-m6-exit-evidence|verify-m4-replay|export-m4-event-stream|m4-benchmark|m4-memory-profile|m4-performance-report> ...\n\nexamples:\n  terminal-cli run -- <program> [args...]\n  terminal-cli run --shell --command \"<command>\"\n  terminal-cli validate-m4-evidence evidence/m4/evidence-manifest.json\n  terminal-cli validate-m4-compatibility evidence/m4/compatibility-matrix.json\n  terminal-cli generate-m5-baseline --output evidence/m5/m5-baseline.json\n  terminal-cli validate-m5-baseline evidence/m5/m5-baseline.json\n  terminal-cli validate-m5-evidence evidence/m5/evidence-manifest.json\n  terminal-cli validate-m5-compatibility evidence/m5/compatibility-matrix.json\n  terminal-cli validate-m5-go-no-go evidence/m5/m5-go-no-go-thresholds.json\n  terminal-cli generate-m5-replay-derivatives --output-dir crates/terminal-fixtures/fixtures/m5-replay\n  terminal-cli verify-m5-replay crates/terminal-fixtures/fixtures/m5-replay --json-output evidence/m5/m5-replay-verification.json\n  terminal-cli generate-m5-dogfood-report --json-output evidence/m5/paneflow-shadow-dogfood.json\n  terminal-cli validate-m5-dogfood evidence/m5/paneflow-shadow-dogfood.json\n  terminal-cli measure-m5-platform --json-output evidence/m5/platform-runtime-evidence.json\n  terminal-cli validate-m5-platform evidence/m5/platform-runtime-evidence.json\n  terminal-cli generate-m5-package-readiness --output evidence/m5/m5-package-readiness.json --release-plan-output evidence/m5/m5-release-plan.json\n  terminal-cli validate-m5-package-readiness evidence/m5/m5-package-readiness.json\n  terminal-cli validate-m5-release-plan evidence/m5/m5-release-plan.json\n  terminal-cli generate-m5-api-audit --output evidence/m5/m5-api-audit.json\n  terminal-cli validate-m5-api-audit evidence/m5/m5-api-audit.json\n  terminal-cli generate-m5-security-baseline --output evidence/m5/m5-security-baseline.json\n  terminal-cli validate-m5-security-baseline evidence/m5/m5-security-baseline.json\n  terminal-cli validate-m6-baseline evidence/m6/m6-baseline.json --paneflow-worktree ../paneflow-hera-m6\n  terminal-cli validate-m6-host-evidence evidence/m6/host-manifest.json\n  terminal-cli validate-m6-exit-evidence evidence/m6/m6-exit-evidence.json\n  terminal-cli verify-m4-replay crates/terminal-fixtures/fixtures/m4-replay --json-output evidence/m4/m4-replay-verification.json\n  terminal-cli export-m4-event-stream crates/terminal-fixtures/fixtures/m4-replay/basic-shell.json --output evidence/m4/replay-event-streams/basic-shell.jsonl\n  terminal-cli m4-benchmark --output evidence/m4/m4-benchmark-summary.json\n  terminal-cli m4-memory-profile --output evidence/m4/m4-memory-profile.json\n  terminal-cli m4-performance-report --bench evidence/m4/m4-benchmark-summary.json --memory evidence/m4/m4-memory-profile.json --thresholds evidence/m4/m4-performance-thresholds.json --json-output evidence/m4/m4-performance-report.json --markdown-output docs/m4-benchmarks-and-memory.md"
 }
 
 fn required_value(
@@ -3859,6 +3967,7 @@ fn executable_candidates(dir: &Path, candidate: &OsStr) -> Vec<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::{RecordingState, RunOptions, TerminalQueryResponder, run};
+    use sha2::{Digest, Sha256};
     use std::ffi::OsString;
     use std::fs;
     use std::path::PathBuf;
@@ -4200,6 +4309,55 @@ mod tests {
             assert_eq!(outcome.code, 0, "{command}: {}", outcome.stderr);
             assert!(outcome.stdout.contains(expected), "{command}");
         }
+    }
+
+    #[test]
+    fn validate_m6_host_evidence_checks_manifest_and_scrubbed_metrics() {
+        let root = temp_dir("hera-cli-m6-host-evidence");
+        let evidence_dir = root.join("evidence/m6");
+        fs::create_dir_all(&evidence_dir).expect("M6 evidence directory");
+        let metrics_path = evidence_dir.join("host.json");
+        let metrics = r#"{
+              "schema":"hera.m6_host_metrics","version":1,
+              "source_command":"paneflow --features hera-host",
+              "run_id":"run-550e8400e29b41d4a716446655440000","pane_pseudonym":"pane-6ba7b8109dad41d180b400c04fd430c8",
+              "selected_engine":"hera","authoritative_engine":"hera_authoritative",
+              "fallback":{"count":0,"reason_class":null,"elapsed_ms":null},
+              "runtime":{"output_batches":100,"dropped_bytes":0,"resize_count":1,"duration_ms":25.0,"exit_class":"success"},
+              "comparison":{"checkpoints":100,"equal_checkpoints":100,"p0_mismatches":0,"unsupported_checkpoints":0},
+              "latency":{"unit":"milliseconds","samples":100,"p50":0.1,"p95":0.2,"p99":0.3},
+              "memory":{"source":"get_process_memory_info","baseline_bytes":1000,"peak_bytes":1200,"delta_bytes":200}
+            }"#;
+        fs::write(&metrics_path, metrics).expect("M6 host metrics");
+        let sha256 = format!("{:x}", Sha256::digest(metrics.as_bytes()));
+        let manifest_path = evidence_dir.join("manifest.json");
+        fs::write(
+            &manifest_path,
+            format!(
+                r#"{{
+              "schema":"hera.m6_host_evidence_manifest","version":1,
+              "run_id":"run-550e8400e29b41d4a716446655440000",
+              "hera_commit":"66c9229a","paneflow_commit":"4129f8ac",
+              "artifacts":[{{
+                "path":"evidence/m6/host.json",
+                "source_command":"paneflow --features hera-host",
+                "run_id":"run-550e8400e29b41d4a716446655440000",
+                "hera_commit":"66c9229a","paneflow_commit":"4129f8ac",
+                "sha256":"{sha256}"
+              }}]
+            }}"#
+            ),
+        )
+        .expect("M6 host manifest");
+
+        let outcome = run(vec![
+            OsString::from("validate-m6-host-evidence"),
+            manifest_path.into_os_string(),
+        ]);
+        let _ = fs::remove_dir_all(root);
+
+        assert_eq!(outcome.code, 0, "{}", outcome.stderr);
+        assert!(outcome.stdout.contains("1 scrubbed artifacts"));
     }
 
     #[test]

@@ -1,0 +1,116 @@
+{
+  "schema": "hera.m6_exit_evidence",
+  "version": 1,
+  "generated_at": "2026-07-10T20:31:33Z",
+  "source_command": "terminal-cli validate-m6-exit-evidence",
+  "hera_commit": "66c9229a",
+  "paneflow_commit": "4129f8ac",
+  "default_path_status": "pass",
+  "windows_canary": {
+    "status": "failed",
+    "duration_seconds": 3719,
+    "completed_60_minute_target": true,
+    "concurrent_panes": 2,
+    "workloads": [
+      "power_shell_echo_unicode",
+      "rapid_output",
+      "output100k_lines",
+      "alternate_screen",
+      "codex_cli",
+      "claude_code"
+    ],
+    "p0_mismatches": 219,
+    "unsupported_checkpoints": 1,
+    "fallback_count": 1,
+    "dropped_bytes": 1526241,
+    "crash_count": 0,
+    "blank_frame_count": 0,
+    "lost_input_count": 0,
+    "orphan_process_count": 0,
+    "latency_samples": 4149,
+    "latency_p95_ms": 0.0124,
+    "memory": {
+      "source": "get_process_memory_info_without_paired_control_after_hard_failure",
+      "hera_peak_bytes": 209739776,
+      "control_peak_bytes": null,
+      "ratio_percent": null
+    },
+    "blocked_reason": "The rapid-output pane dropped 1526241 bytes, fell back once, and the two panes recorded 219 P0 mismatches plus one unsupported checkpoint."
+  },
+  "platforms": {
+    "windows": {
+      "platform": "windows",
+      "status": "failed",
+      "visual_status": "failed",
+      "target_triple": "x86_64-pc-windows-msvc",
+      "toolchain": "rustc 1.96.1",
+      "commands": [
+        {"id":"default_check","command":"cargo check --workspace","status":"pass","exit_code":0,"duration_ms":25550,"blocked_reason":null},
+        {"id":"default_clippy","command":"cargo clippy --workspace --all-targets -- -D warnings","status":"pass","exit_code":0,"duration_ms":8690,"blocked_reason":null},
+        {"id":"default_test","command":"cargo test --workspace","status":"pass","exit_code":0,"duration_ms":40300,"blocked_reason":null},
+        {"id":"hera_host_check","command":"cargo check --workspace --features hera-host","status":"pass","exit_code":0,"duration_ms":12467,"blocked_reason":null},
+        {"id":"hera_host_clippy","command":"cargo clippy --workspace --all-targets --features hera-host -- -D warnings","status":"pass","exit_code":0,"duration_ms":13091,"blocked_reason":null},
+        {"id":"hera_host_test","command":"cargo test --workspace --features hera-host","status":"pass","exit_code":0,"duration_ms":50430,"blocked_reason":null},
+        {"id":"host_goldens","command":"cargo test -p paneflow-app --features hera-host terminal::","status":"pass","exit_code":0,"duration_ms":5311,"blocked_reason":null}
+      ],
+      "blocked_reason": "All feature gates pass, but the visible Windows canary failed the P0 mismatch, fallback and dropped-byte thresholds."
+    },
+    "linux": {
+      "platform": "linux",
+      "status": "blocked",
+      "visual_status": "blocked",
+      "target_triple": "x86_64-unknown-linux-gnu",
+      "toolchain": "unavailable",
+      "commands": [
+        {"id":"default_check","command":"cargo check --workspace","status":"blocked","exit_code":null,"duration_ms":null,"blocked_reason":"No Linux runner is available for the current worktree."},
+        {"id":"default_clippy","command":"cargo clippy --workspace --all-targets -- -D warnings","status":"blocked","exit_code":null,"duration_ms":null,"blocked_reason":"No Linux runner is available for the current worktree."},
+        {"id":"default_test","command":"cargo test --workspace","status":"blocked","exit_code":null,"duration_ms":null,"blocked_reason":"No Linux runner is available for the current worktree."},
+        {"id":"hera_host_check","command":"cargo check --workspace --features hera-host","status":"blocked","exit_code":null,"duration_ms":null,"blocked_reason":"No Linux runner is available for the current worktree."},
+        {"id":"hera_host_clippy","command":"cargo clippy --workspace --all-targets --features hera-host -- -D warnings","status":"blocked","exit_code":null,"duration_ms":null,"blocked_reason":"No Linux runner is available for the current worktree."},
+        {"id":"hera_host_test","command":"cargo test --workspace --features hera-host","status":"blocked","exit_code":null,"duration_ms":null,"blocked_reason":"No Linux runner is available for the current worktree."},
+        {"id":"host_goldens","command":"cargo test -p paneflow-app --features hera-host terminal::","status":"blocked","exit_code":null,"duration_ms":null,"blocked_reason":"No Linux runner is available for the current worktree."}
+      ],
+      "blocked_reason": "No Linux runner or published M6 branch contains the current worktree diff."
+    },
+    "macos": {
+      "platform": "macos",
+      "status": "blocked",
+      "visual_status": "blocked",
+      "target_triple": "aarch64-apple-darwin",
+      "toolchain": "unavailable",
+      "commands": [
+        {"id":"default_check","command":"cargo check --workspace","status":"blocked","exit_code":null,"duration_ms":null,"blocked_reason":"No macOS runner is available for the current worktree."},
+        {"id":"default_clippy","command":"cargo clippy --workspace --all-targets -- -D warnings","status":"blocked","exit_code":null,"duration_ms":null,"blocked_reason":"No macOS runner is available for the current worktree."},
+        {"id":"default_test","command":"cargo test --workspace","status":"blocked","exit_code":null,"duration_ms":null,"blocked_reason":"No macOS runner is available for the current worktree."},
+        {"id":"hera_host_check","command":"cargo check --workspace --features hera-host","status":"blocked","exit_code":null,"duration_ms":null,"blocked_reason":"No macOS runner is available for the current worktree."},
+        {"id":"hera_host_clippy","command":"cargo clippy --workspace --all-targets --features hera-host -- -D warnings","status":"blocked","exit_code":null,"duration_ms":null,"blocked_reason":"No macOS runner is available for the current worktree."},
+        {"id":"hera_host_test","command":"cargo test --workspace --features hera-host","status":"blocked","exit_code":null,"duration_ms":null,"blocked_reason":"No macOS runner is available for the current worktree."},
+        {"id":"host_goldens","command":"cargo test -p paneflow-app --features hera-host terminal::","status":"blocked","exit_code":null,"duration_ms":null,"blocked_reason":"No macOS runner is available for the current worktree."}
+      ],
+      "blocked_reason": "No macOS runner or published M6 branch contains the current worktree diff."
+    }
+  },
+  "interaction_coverage": [
+    {"interaction":"visible_render","status":"pass","proof":"A normal GPUI window painted both selected panes from Hera before fallback."},
+    {"interaction":"power_shell_unicode","status":"pass","proof":"Unicode and styled PowerShell output remained visible."},
+    {"interaction":"rapid_output_100k","status":"failed","proof":"The pane reached the final line but recorded a queue drop and fallback."},
+    {"interaction":"alternate_screen","status":"pass","proof":"The alternate screen became visible and restored the primary screen."},
+    {"interaction":"codex_cli","status":"pass","proof":"Codex completed a bounded no-tool response in the selected pane."},
+    {"interaction":"claude_code","status":"blocked","proof":"Claude Code launched but the local session required login."},
+    {"interaction":"process_cleanup","status":"pass","proof":"All direct child processes were absent after Paneflow shutdown."}
+  ],
+  "decision": "replacement_experiment_blocked",
+  "blockers": [
+    {"id":"windows-p0-mismatches","owner":"paneflow-host","reason":"Two panes recorded 219 P0 comparison mismatches."},
+    {"id":"windows-output-drop","owner":"paneflow-host","reason":"The rapid-output pane dropped 1526241 bytes and fell back once."},
+    {"id":"paired-memory-control","owner":"maintainer","reason":"The paired Alacritty control was not run after the Windows hard-failure criteria were already met."},
+    {"id":"linux-runner","owner":"maintainer","reason":"The current worktree has no measured Linux runner."},
+    {"id":"macos-runner","owner":"maintainer","reason":"The current worktree has no measured macOS runner."},
+    {"id":"claude-auth","owner":"maintainer","reason":"The local Claude Code session requires login before a real agent turn can pass."}
+  ],
+  "artifacts": {
+    "baseline": "evidence/m6/m6-baseline.json",
+    "host_manifest": "evidence/m6/host-manifest.json",
+    "report": "docs/m6-paneflow-controlled-host-replacement-report.md"
+  }
+}

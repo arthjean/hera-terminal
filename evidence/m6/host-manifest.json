@@ -1,0 +1,25 @@
+{
+  "schema": "hera.m6_host_evidence_manifest",
+  "version": 1,
+  "run_id": "run-26ae03f3f7b347ecb10b057af0431fab",
+  "hera_commit": "66c9229a",
+  "paneflow_commit": "4129f8ac",
+  "artifacts": [
+    {
+      "path": "evidence/m6/run-26ae03f3f7b347ecb10b057af0431fab/hera-m6-host-run-26ae03f3f7b347ecb10b057af0431fab-pane-74315357f93c4d7fb7783f66ae3d4a82.json",
+      "source_command": "paneflow --features hera-host",
+      "run_id": "run-26ae03f3f7b347ecb10b057af0431fab",
+      "hera_commit": "66c9229a",
+      "paneflow_commit": "4129f8ac",
+      "sha256": "356c3f1655c549b1e423514e7501d36e9657d8ccfab1d4a0cd3c643030913d81"
+    },
+    {
+      "path": "evidence/m6/run-26ae03f3f7b347ecb10b057af0431fab/hera-m6-host-run-26ae03f3f7b347ecb10b057af0431fab-pane-8e7c8833bab549dab1c2ad18330b6c0c.json",
+      "source_command": "paneflow --features hera-host",
+      "run_id": "run-26ae03f3f7b347ecb10b057af0431fab",
+      "hera_commit": "66c9229a",
+      "paneflow_commit": "4129f8ac",
+      "sha256": "06cb68f4296c82151b240bb4209799b011c7a3ab631a57e4504f348f70329a56"
+    }
+  ]
+}

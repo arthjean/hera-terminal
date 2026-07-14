@@ -1,0 +1,31 @@
+{
+  "schema": "hera.m6_hardening_test_manifest",
+  "version": 1,
+  "generated_at": "2026-07-13T20:39:01Z",
+  "iterations": 25,
+  "filters": [
+    {
+      "id": "comparison",
+      "filter": "terminal::hera_dogfood::comparison",
+      "selected_per_iteration": 4,
+      "total_executions": 100
+    },
+    {
+      "id": "authoritative",
+      "filter": "terminal::hera_dogfood::authoritative",
+      "selected_per_iteration": 5,
+      "total_executions": 125
+    },
+    {
+      "id": "pty_session",
+      "filter": "terminal::pty_session",
+      "selected_per_iteration": 51,
+      "total_executions": 1275
+    }
+  ],
+  "status": "pass",
+  "flaky_failures": 0,
+  "sequence_gaps": 0,
+  "dropped_bytes": 0,
+  "leaked_worker_threads": 0
+}

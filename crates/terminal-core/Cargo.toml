@@ -15,6 +15,7 @@ publish = true
 [dependencies]
 terminal-render-model.workspace = true
 terminal-protocol.workspace = true
+unicode-width.workspace = true
 vte.workspace = true
 
 [package.metadata.docs.rs]

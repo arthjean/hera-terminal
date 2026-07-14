@@ -1,0 +1,40 @@
+{
+  "schema": "hera.m6_host_metrics",
+  "version": 1,
+  "source_command": "paneflow --features hera-host",
+  "run_id": "run-26ae03f3f7b347ecb10b057af0431fab",
+  "pane_pseudonym": "pane-8e7c8833bab549dab1c2ad18330b6c0c",
+  "selected_engine": "hera",
+  "authoritative_engine": "alacritty",
+  "fallback": {
+    "count": 1,
+    "reason_class": "hera_output_dropped",
+    "elapsed_ms": 0.056
+  },
+  "runtime": {
+    "output_batches": 4786,
+    "dropped_bytes": 1526241,
+    "resize_count": 2,
+    "duration_ms": 3719611.1996,
+    "exit_class": "success"
+  },
+  "comparison": {
+    "checkpoints": 201,
+    "equal_checkpoints": 1,
+    "p0_mismatches": 199,
+    "unsupported_checkpoints": 1
+  },
+  "latency": {
+    "unit": "milliseconds",
+    "samples": 4096,
+    "p50": 0.0091,
+    "p95": 0.0124,
+    "p99": 0.0301
+  },
+  "memory": {
+    "source": "get_process_memory_info",
+    "baseline_bytes": 99934208,
+    "peak_bytes": 209731584,
+    "delta_bytes": 109797376
+  }
+}

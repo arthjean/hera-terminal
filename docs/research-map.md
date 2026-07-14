@@ -1,6 +1,6 @@
 # Research Map
 
-Status: M6 controlled Paneflow render-authority experiment in progress
+Status: M6 Paneflow replacement experiment blocked by the first visible canary
 Date: 2026-07-10
 Scope: architecture research and decision register for `Hera`, not implementation.
 
@@ -1192,3 +1192,23 @@ non-regression gate must stay explicit. Public packaging remains a separate
 blocked track: dependent dry-runs still need a staging strategy,
 `cargo-semver-checks` is unavailable, `cargo-audit` and Scorecard are
 unavailable locally, and `cargo-deny` still lacks an explicit license policy.
+
+## M6 Exit Decision
+
+The first visible Windows canary completed 3,719 seconds with two selected
+panes. Default and `hera-host` Windows check, Clippy, test and terminal golden
+gates passed, and the loaded-pane ingestion plus adaptation P95 was 0.0124 ms.
+The render-authority experiment still failed: the two panes recorded 219 P0
+mismatches, one unsupported checkpoint, 1,526,241 dropped Hera bytes and one
+one-way fallback to synchronized Alacritty.
+
+The decision is `replacement_experiment_blocked`. The safe fallback preserved
+the running process, but a fallback is itself a canary failure. Linux and macOS
+remain explicitly blocked because the current worktree diff was not available
+to a runner. The next host work must diagnose the comparison fields and remove
+the 64-batch queue overflow under the 100,000-line workload before repeating the
+same Windows canary. This decision does not authorize a broader canary, default
+replacement, Alacritty removal, PTY replacement or crate publication.
+
+The final report is `docs/m6-paneflow-controlled-host-replacement-report.md`.
+The machine-readable decision is `evidence/m6/m6-exit-evidence.json`.

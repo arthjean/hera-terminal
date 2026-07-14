@@ -1,0 +1,48 @@
+{
+  "schema": "hera.m6_mismatch_classification",
+  "version": 1,
+  "generated_at": "2026-07-10T21:00:00Z",
+  "source_evidence": "evidence/m6/m6-exit-evidence.json",
+  "historical_p0_mismatches": {
+    "total": 219,
+    "classes": {
+      "stale_checkpoint": 0,
+      "terminal_semantic_divergence": 0,
+      "adapter_divergence": 0,
+      "resize_generation_divergence": 0,
+      "unclassified_from_public_evidence": 219
+    }
+  },
+  "historical_unsupported_checkpoints": {
+    "total": 1,
+    "field_path": "unclassified_from_public_evidence",
+    "classification": "unclassified_from_public_evidence"
+  },
+  "diagnostic_contract": {
+    "allowed_fields": [
+      "pane_pseudonym",
+      "field_path",
+      "outcome_class",
+      "pty_batch_sequence",
+      "resize_generation",
+      "active_screen_class",
+      "checkpoint_duration_ms"
+    ],
+    "forbidden_fields": [
+      "cells",
+      "lines",
+      "bytes",
+      "commands",
+      "prompts",
+      "paths",
+      "identities"
+    ]
+  },
+  "deterministic_reproducer": {
+    "test": "terminal::hera_dogfood::comparison::legacy_stale_checkpoint_reproducer_has_a_stable_field",
+    "class": "stale_checkpoint",
+    "first_differing_field": "$.viewport_lines[0]",
+    "historical_attribution": false,
+    "note": "The fixture proves the legacy render-cadence failure mode. Scrubbed historical counters do not contain field paths, so none of the 219 mismatches are relabeled from this reproducer."
+  }
+}

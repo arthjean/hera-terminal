@@ -1,0 +1,58 @@
+{
+  "schema": "hera.m6_baseline",
+  "version": 1,
+  "generated_at": "2026-07-10T11:49:14Z",
+  "source_milestone": {
+    "id": "M5",
+    "status_path": "tasks/prd-m5-compatibility-release-hardening-status.json",
+    "status": "DONE",
+    "stories_total": 18,
+    "stories_done": 18
+  },
+  "live_shadow": {
+    "summary_path": "evidence/m5/dogfood/live-gpui-summary-2026-07-10.json",
+    "status": "targeted_pass",
+    "completed_45_minute_target": true,
+    "mismatch_reports": 0,
+    "p0_mismatches": 0
+  },
+  "paneflow": {
+    "base_commit": "4129f8ac",
+    "worktree_label": "paneflow-hera-m6",
+    "branch": "feat/hera-m6-host-replacement"
+  },
+  "outcomes": [
+    {
+      "outcome": "windows_visible_canary",
+      "status": "candidate",
+      "criteria": [
+        "M5 remains DONE with 18 completed stories",
+        "The 45-minute Windows shadow run remains zero-mismatch",
+        "The isolated Paneflow worktree contract matches",
+        "All M6 activation, authority, fallback and default-path gates pass"
+      ]
+    },
+    {
+      "outcome": "cross_platform_canary",
+      "status": "blocked",
+      "criteria": [
+        "The Windows visible canary passes",
+        "Linux default and hera-host feature rows are measured",
+        "macOS default and hera-host feature rows are measured"
+      ]
+    },
+    {
+      "outcome": "default_replacement",
+      "status": "prohibited",
+      "criteria": [
+        "M6 cannot authorize a default-engine change",
+        "A later PRD must review cross-platform canaries and removal scope explicitly"
+      ]
+    }
+  ],
+  "privacy": {
+    "public_summary": true,
+    "contains_absolute_host_paths": false,
+    "contains_terminal_transcript": false
+  }
+}

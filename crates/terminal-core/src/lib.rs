@@ -404,6 +404,56 @@ mod tests {
     }
 
     #[test]
+    fn wide_unicode_occupies_lead_and_spacer_cells() {
+        let mut terminal = terminal(6, 1);
+
+        terminal.advance_bytes("é漢字".as_bytes());
+
+        let snapshot = terminal.render_snapshot();
+        let cells = snapshot.viewport_rows()[0].cells();
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "é漢 字  ");
+        assert_eq!(cells[0].width(), 1);
+        assert_eq!(cells[1].width(), 2);
+        assert_eq!(cells[2].width(), 0);
+        assert_eq!(cells[3].width(), 2);
+        assert_eq!(cells[4].width(), 0);
+        assert_eq!(snapshot.cursor().column(), 5);
+    }
+
+    #[test]
+    fn wide_unicode_prewraps_when_only_the_last_column_is_available() {
+        let mut terminal = terminal(4, 2);
+
+        terminal.advance_bytes("abc漢".as_bytes());
+
+        let snapshot = terminal.render_snapshot();
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "abc ");
+        assert!(snapshot.viewport_rows()[0].wrapped());
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[1]), "漢   ");
+        assert_eq!(snapshot.viewport_rows()[1].cells()[0].width(), 2);
+        assert_eq!(snapshot.viewport_rows()[1].cells()[1].width(), 0);
+        assert_eq!(snapshot.cursor().row(), 1);
+        assert_eq!(snapshot.cursor().column(), 2);
+    }
+
+    #[test]
+    fn resize_keeps_wide_leads_and_spacers_on_the_same_visual_row() {
+        let mut terminal = terminal(6, 2);
+        terminal.advance_bytes("abcd漢".as_bytes());
+
+        terminal.resize(5, 2).expect("resize should be valid");
+        let snapshot = terminal.render_snapshot();
+
+        assert_eq!(snapshot.scrollback_rows().len(), 1);
+        assert_eq!(scrollback_text(&snapshot.scrollback_rows()[0]), "abcd ");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "漢    ");
+        assert_eq!(snapshot.viewport_rows()[0].cells()[0].width(), 2);
+        assert_eq!(snapshot.viewport_rows()[0].cells()[1].width(), 0);
+        assert_eq!(snapshot.cursor().row(), 0);
+        assert_eq!(snapshot.cursor().column(), 0);
+    }
+
+    #[test]
     fn cr_lf_bs_and_tab_controls_move_cursor_by_m1_policy() {
         let mut terminal = terminal(8, 2);
 
@@ -564,7 +614,7 @@ mod tests {
     }
 
     #[test]
-    fn ed_modes_clear_viewport_regions_without_touching_scrollback() {
+    fn ed_below_and_above_clear_viewport_regions_without_touching_scrollback() {
         let mut erase_below = terminal(5, 3);
         erase_below.advance_bytes(b"abcde\r\nfghij\r\nklmno\x1b[2;3H\x1b[J");
         let snapshot = erase_below.render_snapshot();
@@ -581,13 +631,73 @@ mod tests {
         assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "     ");
         assert_eq!(viewport_text(&snapshot.viewport_rows()[1]), "   ij");
         assert_eq!(viewport_text(&snapshot.viewport_rows()[2]), "klmno");
+    }
 
-        let mut erase_all = terminal(5, 3);
-        erase_all.advance_bytes(b"abcde\r\nfghij\r\nklmno\x1b[2J");
-        let snapshot = erase_all.render_snapshot();
-        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "     ");
-        assert_eq!(viewport_text(&snapshot.viewport_rows()[1]), "     ");
-        assert_eq!(viewport_text(&snapshot.viewport_rows()[2]), "     ");
+    #[test]
+    fn ed_all_moves_occupied_primary_rows_into_scrollback() {
+        let mut terminal = terminal(5, 3);
+        terminal.advance_bytes(b"first\r\nnext\x1b[2J");
+
+        let snapshot = terminal.render_snapshot();
+
+        assert_eq!(snapshot.scrollback_rows().len(), 2);
+        assert_eq!(scrollback_text(&snapshot.scrollback_rows()[0]), "first");
+        assert_eq!(scrollback_text(&snapshot.scrollback_rows()[1]), "next ");
+        assert!(
+            snapshot
+                .viewport_rows()
+                .iter()
+                .all(|row| viewport_text(row) == "     ")
+        );
+        assert_eq!(snapshot.cursor().row(), 1);
+        assert_eq!(snapshot.cursor().column(), 4);
+    }
+
+    #[test]
+    fn ed_all_moves_one_blank_primary_row_into_scrollback() {
+        let mut terminal = terminal(5, 3);
+
+        terminal.advance_bytes(b"\x1b[2J");
+
+        let snapshot = terminal.render_snapshot();
+        assert_eq!(snapshot.scrollback_rows().len(), 1);
+        assert_eq!(scrollback_text(&snapshot.scrollback_rows()[0]), "     ");
+    }
+
+    #[test]
+    fn ed_all_uses_the_current_background_for_the_new_viewport() {
+        let mut terminal = terminal(4, 1);
+
+        terminal.advance_bytes(b"\x1b[44m\x1b[2J");
+
+        let snapshot = terminal.render_snapshot();
+        assert_eq!(snapshot.scrollback_rows().len(), 1);
+        for cell in snapshot.viewport_rows()[0].cells() {
+            assert_eq!(cell.style().background(), Some(Color::Indexed(4)));
+        }
+    }
+
+    #[test]
+    fn ed_all_on_alternate_screen_does_not_grow_primary_scrollback() {
+        let mut terminal = terminal(5, 3);
+        terminal.advance_bytes(b"base\x1b[?1049hfirst\r\nnext\x1b[2J");
+
+        let alternate = terminal.render_snapshot();
+
+        assert_eq!(alternate.active_screen(), ScreenIdentity::Alternate);
+        assert!(alternate.scrollback_rows().is_empty());
+        assert_eq!(terminal.scrollback_len(), 0);
+        assert!(
+            alternate
+                .viewport_rows()
+                .iter()
+                .all(|row| viewport_text(row) == "     ")
+        );
+
+        terminal.advance_bytes(b"\x1b[?1049l");
+        let primary = terminal.render_snapshot();
+        assert_eq!(primary.viewport_rows()[0].cells()[0].ch(), 'b');
+        assert_eq!(terminal.scrollback_len(), 0);
     }
 
     #[test]
@@ -611,6 +721,43 @@ mod tests {
         let snapshot = erase_all.render_snapshot();
         assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "      ");
         assert_eq!(snapshot.cursor().column(), 2);
+    }
+
+    #[test]
+    fn erase_line_uses_only_the_current_background_for_blank_cells() {
+        let mut terminal = terminal(4, 1);
+
+        terminal.advance_bytes(b"\x1b[31;47;1m\x1b[K");
+        let snapshot = terminal.render_snapshot();
+
+        for cell in snapshot.viewport_rows()[0].cells() {
+            assert_eq!(cell.ch(), ' ');
+            assert_eq!(cell.style().foreground(), None);
+            assert_eq!(cell.style().background(), Some(Color::Indexed(7)));
+            assert!(!cell.style().bold());
+        }
+    }
+
+    #[test]
+    fn erase_line_right_preserves_the_last_cell_while_autowrap_is_pending() {
+        let mut terminal = terminal(4, 1);
+
+        terminal.advance_bytes(b"abc]\x1b[K");
+        let snapshot = terminal.render_snapshot();
+
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "abc]");
+        assert_eq!(snapshot.cursor().column(), 3);
+    }
+
+    #[test]
+    fn erase_through_the_last_column_clears_wrap_metadata() {
+        let mut terminal = terminal(4, 2);
+
+        terminal.advance_bytes(b"abcde\x1b[1;2H\x1b[K");
+        let snapshot = terminal.render_snapshot();
+
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "a   ");
+        assert!(!snapshot.viewport_rows()[0].wrapped());
     }
 
     #[test]
@@ -763,6 +910,17 @@ mod tests {
     }
 
     #[test]
+    fn cursor_visibility_changes_are_global_across_alternate_screen_switches() {
+        let mut terminal = terminal(5, 2);
+
+        terminal.advance_bytes(b"\x1b[?25l\x1b[?1049h\x1b[?25h\x1b[?1049l");
+
+        let snapshot = terminal.render_snapshot();
+        assert_eq!(snapshot.active_screen(), ScreenIdentity::Primary);
+        assert!(snapshot.cursor().visible());
+    }
+
+    #[test]
     fn trimmed_scrollback_handle_returns_not_found() {
         let config = TerminalConfig::with_scrollback(2, 1, ScrollbackConfig::new(1, 1024)).unwrap();
         let mut terminal = Terminal::with_config(config);
@@ -910,6 +1068,53 @@ mod tests {
         assert_eq!(snapshot.cursor().row(), 0);
         assert_eq!(snapshot.cursor().column(), 2);
         assert!(snapshot.scrollback_rows().is_empty());
+    }
+
+    #[test]
+    fn primary_resize_shrinks_height_before_reflowing_width() {
+        let mut terminal = terminal(8, 6);
+
+        terminal.advance_bytes(b"\x1b[1;8HX\x1b[2;1H");
+        terminal.resize(4, 4).expect("resize should be valid");
+        let snapshot = terminal.render_snapshot();
+
+        assert_eq!(snapshot.scrollback_rows().len(), 1);
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "   X");
+        assert_eq!(snapshot.cursor().row(), 1);
+        assert_eq!(snapshot.cursor().column(), 0);
+    }
+
+    #[test]
+    fn primary_resize_height_growth_pulls_rows_from_scrollback() {
+        let mut terminal = terminal(3, 2);
+
+        terminal.advance_bytes(b"a\r\nb\r\nc");
+        assert_eq!(terminal.scrollback_len(), 1);
+
+        terminal.resize(3, 3).expect("resize should be valid");
+        let snapshot = terminal.render_snapshot();
+
+        assert!(snapshot.scrollback_rows().is_empty());
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "a  ");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[1]), "b  ");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[2]), "c  ");
+        assert_eq!(snapshot.cursor().row(), 2);
+    }
+
+    #[test]
+    fn primary_resize_keeps_the_cursor_row_visible_when_lower_rows_reflow() {
+        let mut terminal = terminal(8, 3);
+
+        terminal.advance_bytes(b"\x1b[2;1Habcdefgh\x1b[3;1HABCDEFGH\x1b[1;1H");
+        terminal.resize(4, 3).expect("resize should be valid");
+        let snapshot = terminal.render_snapshot();
+
+        assert!(snapshot.scrollback_rows().is_empty());
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[0]), "    ");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[1]), "abcd");
+        assert_eq!(viewport_text(&snapshot.viewport_rows()[2]), "efgh");
+        assert_eq!(snapshot.cursor().row(), 0);
+        assert_eq!(snapshot.cursor().column(), 0);
     }
 
     #[test]

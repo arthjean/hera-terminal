@@ -12,10 +12,10 @@ first dogfood environment.
 
 ## Current Status
 
-Hera is a six-crate Rust 2024 workspace. M1 through M5 are complete. The current
-M6 work is a controlled rendering-authority experiment in Paneflow for
-explicitly selected panes. It does not replace the PTY, input handling, or the
-default terminal path.
+Hera is a six-crate Rust 2024 workspace. M1 through M5 are complete. M6 tested
+a controlled rendering-authority experiment in Paneflow for explicitly selected
+panes. The experiment is blocked after its first visible Windows canary and does
+not replace the PTY, input handling, or default terminal path.
 
 | Milestone | Status | Primary evidence |
 |---|---|---|
@@ -25,19 +25,23 @@ default terminal path.
 | M3: Paneflow shadow dogfood | DONE | Side-by-side integration without changing the authoritative renderer |
 | M4: public proof | DONE | Replays, benchmarks, memory profiles, API examples, and evidence package |
 | M5: compatibility and release hardening | DONE | 18 passing compatibility rows and a targeted Windows dogfood pass |
-| M6: controlled host replacement | IN PROGRESS | Baseline and activation complete, rendering-authority work underway |
+| M6: controlled host replacement | BLOCKED | 60-minute Windows canary recorded P0 mismatches, dropped output and fallback |
 
 The latest verified M5 run exercised two Paneflow panes for 45 minutes in
 shadow mode and produced no mismatch reports. That result unlocks a limited
 rendering-authority experiment. It does not yet prove cross-platform replacement
 or public release readiness.
 
-The M6 direction was selected after the final M5 report. That report remains the
-historical closeout for the milestone; the research map and M6 PRD carry the
-current decision.
+The M6 direction was selected after the final M5 report. The visible canary then
+ran for 3,719 seconds with two panes. It recorded 219 P0 mismatches, one
+unsupported checkpoint, 1,526,241 dropped Hera bytes and one safe fallback.
+That evidence selects `replacement_experiment_blocked`; the default path remains
+Alacritty.
 
 Open limitations:
 
+- Hera cannot yet keep render authority during the 100,000-line Paneflow burst.
+- The Windows comparison fields behind the 219 P0 mismatches need diagnosis.
 - Linux and macOS do not yet have runtime measurements equivalent to M5 on
   Windows.
 - Dry runs for dependent crates remain blocked by unpublished Hera crates or
@@ -184,17 +188,20 @@ default path remain controlled. Before any expansion, the canary must prove zero
 P0 mismatches, zero fallbacks, zero dropped bytes, bounded latency, and memory
 usage comparable to the Alacritty control.
 
-A successful Windows run can authorize only a broader canary. Default
-replacement remains prohibited until essential interactions and Linux/macOS
-behavior have been measured and the regression gates have passed.
+The first Windows run did not pass. Work stays inside targeted host hardening
+until the comparison mismatches and bounded-queue overflow are fixed and the
+same canary passes again. Default replacement remains prohibited, and Linux and
+macOS behavior is still unmeasured.
 
 ## Documentation
 
 - [`docs/research-map.md`](docs/research-map.md): decision register and reference architecture
 - [`docs/m5-compatibility-release-hardening-report.md`](docs/m5-compatibility-release-hardening-report.md): historical M5 closeout
+- [`docs/m6-paneflow-controlled-host-replacement-report.md`](docs/m6-paneflow-controlled-host-replacement-report.md): M6 canary and exit decision
 - [`docs/m4-public-proof-report.md`](docs/m4-public-proof-report.md): M4 public proof
 - [`docs/reference-inventory/`](docs/reference-inventory/): per-engine inventories
 - [`evidence/m5/`](evidence/m5/): machine-readable M5 evidence
+- [`evidence/m6/`](evidence/m6/): scrubbed M6 host metrics and exit evidence
 - [`tasks/`](tasks/): milestone PRDs and status trackers
 
 ## Non-Negotiable Principles

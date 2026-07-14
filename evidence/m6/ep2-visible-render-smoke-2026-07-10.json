@@ -1,0 +1,39 @@
+{
+  "schema": "hera.m6_visible_render_smoke",
+  "version": 1,
+  "captured_at": "2026-07-10T15:34:35Z",
+  "status": "pass",
+  "source": {
+    "hera_commit": "1ace099",
+    "paneflow_base_commit": "4129f8ac",
+    "paneflow_worktree_label": "paneflow-hera-m6",
+    "paneflow_branch": "feat/hera-m6-host-replacement"
+  },
+  "activation": {
+    "cargo_feature": "hera-host",
+    "terminal_engine_selector": "hera",
+    "platform": "windows"
+  },
+  "observations": {
+    "authoritative_panes": 10,
+    "fallback_events": 0,
+    "normal_pane_body_visible": true,
+    "startup_shell_output_visible": true,
+    "side_by_side_surface_visible": false,
+    "process_exited_after_smoke": true,
+    "orphan_paneflow_processes": 0
+  },
+  "verification": {
+    "method": "Windows GPUI window inspection plus structured runtime engine logs",
+    "golden_corpus_passed": true,
+    "alternate_screen_roundtrip_passed": true,
+    "default_alacritty_corpus_passed": true
+  },
+  "privacy": {
+    "public_summary": true,
+    "contains_absolute_host_paths": false,
+    "contains_terminal_transcript": false,
+    "contains_local_identity": false,
+    "contains_tokens": false
+  }
+}

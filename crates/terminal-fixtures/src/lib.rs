@@ -28,6 +28,10 @@ mod m5_platform;
 mod m5_release;
 mod m5_replay;
 mod m5_security;
+mod m6_baseline;
+mod m6_exit;
+mod m6_hardening;
+mod m6_host_evidence;
 
 pub use m4_compatibility::{
     M4_COMPATIBILITY_MATRIX_SCHEMA, M4_COMPATIBILITY_MATRIX_VERSION,
@@ -113,6 +117,26 @@ pub use m5_security::{
     M5SecurityCoverageCategory, M5SecurityCoverageStatus, M5SecurityFinding,
     M5SecurityFindingSeverity, M5SecurityInstallStatus, M5SecuritySummary, M5SecurityToolCheck,
     M5SecurityToolId,
+};
+pub use m6_baseline::{
+    M6_BASELINE_SCHEMA, M6_BASELINE_VERSION, M6_MAX_BASELINE_BYTES, M6Baseline, M6BaselinePrivacy,
+    M6LiveShadowBaseline, M6OutcomePolicy, M6OutcomeStatus, M6PaneflowBaseline, M6SourceMilestone,
+};
+pub use m6_exit::{
+    M6_EXIT_EVIDENCE_SCHEMA, M6_EXIT_EVIDENCE_VERSION, M6_MAX_EXIT_EVIDENCE_BYTES, M6Blocker,
+    M6CanaryMemory, M6CanaryWorkload, M6EvidenceStatus, M6ExitArtifacts, M6ExitDecision,
+    M6ExitEvidence, M6InteractionCoverage, M6Platform, M6PlatformCommand, M6PlatformCommandId,
+    M6PlatformRow, M6PlatformRows, M6WindowsCanary,
+};
+pub use m6_hardening::{
+    M6_HARDENING_TEST_MANIFEST_SCHEMA, M6_MAX_MISMATCH_CLASSIFICATION_BYTES,
+    M6_MISMATCH_CLASSIFICATION_SCHEMA, M6_MISMATCH_CLASSIFICATION_VERSION, M6HardeningTestManifest,
+    M6MismatchClassification,
+};
+pub use m6_host_evidence::{
+    M6_HOST_EVIDENCE_MANIFEST_SCHEMA, M6_HOST_EVIDENCE_VERSION, M6_HOST_METRICS_SCHEMA,
+    M6_MAX_HOST_EVIDENCE_ARTIFACTS, M6_MAX_HOST_EVIDENCE_BYTES, M6HostEvidenceArtifact,
+    M6HostEvidenceManifest,
 };
 
 pub const M1_MAX_FIXTURE_FILE_BYTES: u64 = 2 * 1024 * 1024;
